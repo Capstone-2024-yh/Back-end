@@ -31,6 +31,7 @@ dependencies {
     testRuntimeOnly("org.junit.platform:junit-platform-launcher")
 
     implementation ("io.github.cdimascio:dotenv-java:2.2.4")
+    implementation ("org.mindrot:jbcrypt:0.4")
 }
 
 kotlin {
