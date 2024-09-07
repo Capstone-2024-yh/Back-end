@@ -13,13 +13,9 @@ class AuthController(
 
     // 회원가입
     @PostMapping("/register")
-    fun register(
-        @RequestParam username: String,
-        @RequestParam email: String,
-        @RequestParam password: String
-    ): ResponseEntity<String> {
+    fun register(@RequestBody registerRequest: RegisterRequest): ResponseEntity<String> {
         try {
-            authService.registerUser(username, email, password)
+            authService.registerUser(registerRequest.username, registerRequest.email, registerRequest.password)
         } catch (e: Exception) {
             return ResponseEntity.badRequest().body("User registration failed")
         }
@@ -28,11 +24,8 @@ class AuthController(
 
     // 로그인
     @PostMapping("/login")
-    fun login(
-        @RequestParam email: String,
-        @RequestParam password: String
-    ): ResponseEntity<String> {
-        val success = authService.login(email, password)
+    fun login(@RequestBody loginRequest: LoginRequest): ResponseEntity<String> {
+        val success = authService.login(loginRequest.email, loginRequest.password)
         return if (success) {
             ResponseEntity.ok("Login successful")
         } else {
@@ -57,3 +50,15 @@ class AuthController(
         }
     }
 }
+
+// DTO 정의
+data class RegisterRequest(
+    val username: String,
+    val email: String,
+    val password: String
+)
+
+data class LoginRequest(
+    val email: String,
+    val password: String
+)
