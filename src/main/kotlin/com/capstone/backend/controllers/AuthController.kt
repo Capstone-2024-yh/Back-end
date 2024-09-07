@@ -1,17 +1,14 @@
 package com.capstone.backend.controllers
 
 import com.capstone.backend.Service.AuthService
-import com.capstone.backend.Service.UserService
 import org.springframework.http.ResponseEntity
 import org.springframework.web.bind.annotation.*
-import org.mindrot.jbcrypt.BCrypt
 
 
 @RestController
 @RequestMapping("/auth")
 class AuthController(
     private val authService: AuthService,
-    private val userService: UserService
 ) {
 
     // 회원가입
