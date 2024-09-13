@@ -23,13 +23,13 @@ data class VenueInfo(
     @Column(name = "address", nullable = false)
     val address: String,  // 주소
 
-    @Column(name = "rental_fee", precision = 10, scale = 2)
+    @Column(name = "rental_fee", precision = 10, columnDefinition = "numeric")
     val rentalFee: Double?,  // 대관비
 
     @Column(name = "capacity")
     val capacity: Int?,  // 수용 인원
 
-    @Column(name = "area", precision = 10, scale = 2)
+    @Column(name = "area", precision = 10, columnDefinition = "numeric")
     val area: Double?,  // 면적
 
     @Column(name = "space_type")
