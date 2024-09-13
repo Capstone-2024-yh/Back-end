@@ -24,14 +24,18 @@ dependencies {
     implementation("org.springframework.boot:spring-boot-starter-web")
     implementation("com.fasterxml.jackson.module:jackson-module-kotlin")
     implementation("org.jetbrains.kotlin:kotlin-reflect")
-    developmentOnly("org.springframework.boot:spring-boot-devtools")
-    runtimeOnly("org.postgresql:postgresql")
+    implementation("org.hibernate:hibernate-spatial:5.6.11.Final")
+    implementation("org.mindrot:jbcrypt:0.4")
+    implementation("io.github.cdimascio:dotenv-java:2.2.4")
+    implementation("org.locationtech.jts:jts-core:1.18.0")
+
     testImplementation("org.springframework.boot:spring-boot-starter-test")
     testImplementation("org.jetbrains.kotlin:kotlin-test-junit5")
     testRuntimeOnly("org.junit.platform:junit-platform-launcher")
 
-    implementation ("io.github.cdimascio:dotenv-java:2.2.4")
-    implementation ("org.mindrot:jbcrypt:0.4")
+    developmentOnly("org.springframework.boot:spring-boot-devtools")
+    implementation("org.postgresql:postgresql")
+
 }
 
 kotlin {
