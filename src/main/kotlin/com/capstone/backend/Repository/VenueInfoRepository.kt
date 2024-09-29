@@ -6,7 +6,7 @@ import org.springframework.data.repository.query.Param
 import org.springframework.data.jpa.repository.Query
 import org.locationtech.jts.geom.Point
 
-interface VenueInfoRepository : JpaRepository<VenueInfo, Long> {
+interface VenueInfoRepository : JpaRepository<VenueInfo, Int> {
 
     // 좌표 범위 내 장소 검색 (반경 내에 있는 장소를 검색)
     @Query(value = """

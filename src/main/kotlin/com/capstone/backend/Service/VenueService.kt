@@ -16,7 +16,7 @@ class VenueInfoService(private val venueInfoRepository: VenueInfoRepository) {
     }
 
     // ID로 특정 장소 조회
-    fun getVenueById(venueId: Long): Optional<VenueInfo> {
+    fun getVenueById(venueId: Int): Optional<VenueInfo> {
         return venueInfoRepository.findById(venueId)
     }
 
@@ -26,7 +26,7 @@ class VenueInfoService(private val venueInfoRepository: VenueInfoRepository) {
     }
 
     // 장소 정보 수정
-    fun updateVenue(venueId: Long, updatedVenueInfo: VenueInfo): Optional<VenueInfo> {
+    fun updateVenue(venueId: Int, updatedVenueInfo: VenueInfo): Optional<VenueInfo> {
         val existingVenue = venueInfoRepository.findById(venueId)
         return if (existingVenue.isPresent) {
             val venueToUpdate = existingVenue.get().copy(
@@ -51,7 +51,7 @@ class VenueInfoService(private val venueInfoRepository: VenueInfoRepository) {
     }
 
     // 장소 삭제
-    fun deleteVenue(venueId: Long) {
+    fun deleteVenue(venueId: Int) {
         venueInfoRepository.deleteById(venueId)
     }
 }

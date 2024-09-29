@@ -14,15 +14,15 @@ import org.locationtech.jts.geom.Coordinate
 class VenueInfoController(private val venueInfoService: VenueInfoService) {
 
     // 모든 장소 정보 조회
-    @GetMapping
-    fun getAllVenues(): ResponseEntity<List<VenueInfo>> {
-        val venues = venueInfoService.getAllVenues()
-        return ResponseEntity.ok(venues)
-    }
+//    @GetMapping
+//    fun getAllVenues(): ResponseEntity<List<VenueInfo>> {
+//        val venues = venueInfoService.getAllVenues()
+//        return ResponseEntity.ok(venues)
+//    }
 
     // ID로 특정 장소 조회
     @GetMapping("/{id}")
-    fun getVenueById(@PathVariable id: Long): ResponseEntity<VenueInfo> {
+    fun getVenueById(@PathVariable id: Int): ResponseEntity<VenueInfo> {
         val venue = venueInfoService.getVenueById(id)
         return if (venue.isPresent) {
             ResponseEntity.ok(venue.get())
@@ -41,7 +41,7 @@ class VenueInfoController(private val venueInfoService: VenueInfoService) {
     // 장소 정보 수정
     @PutMapping("/{id}")
     fun updateVenue(
-        @PathVariable id: Long,
+        @PathVariable id: Int,
         @RequestBody updatedVenueInfo: VenueInfo
     ): ResponseEntity<VenueInfo> {
         val updatedVenue = venueInfoService.updateVenue(id, updatedVenueInfo)
@@ -68,7 +68,7 @@ class VenueInfoController(private val venueInfoService: VenueInfoService) {
 
     // 장소 삭제
     @DeleteMapping("/{id}")
-    fun deleteVenue(@PathVariable id: Long): ResponseEntity<Void> {
+    fun deleteVenue(@PathVariable id: Int): ResponseEntity<Void> {
         venueInfoService.deleteVenue(id)
         return ResponseEntity.noContent().build()
     }
