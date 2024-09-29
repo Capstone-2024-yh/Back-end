@@ -17,9 +17,6 @@ data class VenueInfo(
     @Column(name = "owner_id", nullable = false)
     val ownerId: Int,  // 소유자 회원 ID
 
-    @Column(name = "photo")
-    val photo: String?,  // 사진 URL 또는 경로
-
     @Column(name = "address", nullable = false)
     val address: String,  // 주소
 

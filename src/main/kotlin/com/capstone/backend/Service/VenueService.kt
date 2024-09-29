@@ -31,7 +31,6 @@ class VenueInfoService(private val venueInfoRepository: VenueInfoRepository) {
         return if (existingVenue.isPresent) {
             val venueToUpdate = existingVenue.get().copy(
                 ownerId = updatedVenueInfo.ownerId,
-                photo = updatedVenueInfo.photo,
                 address = updatedVenueInfo.address,
                 rentalFee = updatedVenueInfo.rentalFee,
                 capacity = updatedVenueInfo.capacity,
