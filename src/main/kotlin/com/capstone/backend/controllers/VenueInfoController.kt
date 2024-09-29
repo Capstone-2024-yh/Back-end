@@ -1,7 +1,9 @@
 package com.capstone.backend.controllers
 
 import com.capstone.backend.Entity.VenueInfo
+import com.capstone.backend.Entity.VenuePhoto
 import com.capstone.backend.Service.VenueInfoService
+import com.capstone.backend.Service.VenuePhotoService
 import org.locationtech.jts.geom.GeometryFactory
 import org.springframework.http.ResponseEntity
 import org.springframework.web.bind.annotation.*
@@ -11,7 +13,10 @@ import org.locationtech.jts.geom.Coordinate
 
 @RestController
 @RequestMapping("/venues")
-class VenueInfoController(private val venueInfoService: VenueInfoService) {
+class VenueInfoController(
+    private val venueInfoService: VenueInfoService,
+    private val venuePhotoService: VenuePhotoService
+) {
 
     // 모든 장소 정보 조회
 //    @GetMapping
@@ -72,4 +77,26 @@ class VenueInfoController(private val venueInfoService: VenueInfoService) {
         venueInfoService.deleteVenue(id)
         return ResponseEntity.noContent().build()
     }
+
+    // 장소 사진 조회
+    @GetMapping("/{venueId}")
+    fun getPhotosByVenueId(@PathVariable venueId: Int): ResponseEntity<List<VenuePhoto>> {
+        val photos = venuePhotoService.getPhotosByVenueId(venueId)
+        return ResponseEntity.ok(photos)
+    }
+
+    // 장소 사진 추가
+    @PostMapping("/photos")
+    fun saveVenuePhoto(@RequestBody venuePhoto: VenuePhoto): ResponseEntity<VenuePhoto> {
+        val savedPhoto = venuePhotoService.saveVenuePhoto(venuePhoto)
+        return ResponseEntity.ok(savedPhoto)
+    }
+
+    // 장소 사진 삭제
+    @DeleteMapping("/{photoId}")
+    fun deleteVenuePhoto(@PathVariable photoId: Int): ResponseEntity<Void> {
+        venuePhotoService.deleteVenuePhoto(photoId)
+        return ResponseEntity.noContent().build()
+    }
+
 }
