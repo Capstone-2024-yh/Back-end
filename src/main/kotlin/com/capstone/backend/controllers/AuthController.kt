@@ -1,6 +1,7 @@
 package com.capstone.backend.controllers
 
 import com.capstone.backend.Service.AuthService
+import com.capstone.backend.core.aop.RequiresLogin
 import org.springframework.http.ResponseEntity
 import org.springframework.web.bind.annotation.*
 
@@ -34,6 +35,7 @@ class AuthController(
     }
 
     // 로그아웃
+    @RequiresLogin
     @PostMapping("/logout")
     fun logout(): ResponseEntity<String> {
         authService.logout()
