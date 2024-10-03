@@ -2,6 +2,8 @@ package com.capstone.backend.controllers
 
 import com.capstone.backend.Entity.VenueInfo
 import com.capstone.backend.Entity.VenuePhoto
+import com.capstone.backend.Repository.VenueInfoRepository
+import com.capstone.backend.Service.AuthService
 import com.capstone.backend.Service.VenueInfoService
 import com.capstone.backend.Service.VenuePhotoService
 import org.locationtech.jts.geom.GeometryFactory
@@ -15,7 +17,8 @@ import org.locationtech.jts.geom.Coordinate
 @RequestMapping("/venues")
 class VenueInfoController(
     private val venueInfoService: VenueInfoService,
-    private val venuePhotoService: VenuePhotoService
+    private val venuePhotoService: VenuePhotoService,
+    private val authService: AuthService
 ) {
 
     // 모든 장소 정보 조회
@@ -37,37 +40,88 @@ class VenueInfoController(
     }
 
     // 새로운 장소 추가
-    @PostMapping
-    fun createVenue(@RequestBody venueInfo: VenueInfo): ResponseEntity<VenueInfo> {
+    @PostMapping("/create")
+    fun createVenue(
+        @RequestBody venueInfoDTO: VenueInfoDTO
+    ): ResponseEntity<VenueInfoResponse> {
+        val geometryFactory = GeometryFactory()
+        val venueInfo = VenueInfo(
+            ownerId = venueInfoDTO.ownerId,
+            address = venueInfoDTO.address,
+            rentalFee = venueInfoDTO.rentalFee,
+            capacity = venueInfoDTO.capacity,
+            area = venueInfoDTO.area,
+            spaceType = venueInfoDTO.spaceType,
+            location = geometryFactory.createPoint(Coordinate(venueInfoDTO.longitude, venueInfoDTO.latitude))
+        )
+        // 필요한 필드를 venueInfo에 추가하거나 수정하세요.
         val createdVenue = venueInfoService.createVenue(venueInfo)
-        return ResponseEntity.ok(createdVenue)
+
+        val venuePhoto = VenuePhoto(
+            venueId = createdVenue.venueId,
+            photoBase64 = venueInfoDTO.mainImage
+        )
+        venuePhotoService.saveVenuePhoto(venuePhoto)
+
+        val resp = createdVenue.location?.let {
+            VenueInfoResponse(
+                ownerId = createdVenue.ownerId,
+                address = createdVenue.address,
+                rentalFee = createdVenue.rentalFee!!,
+                capacity = createdVenue.capacity!!,
+                area = createdVenue.area,
+                spaceType = createdVenue.spaceType!!,
+                longitude = it.x,
+                latitude = it.y
+            )
+        }
+        return ResponseEntity.ok(resp)
     }
 
     // 장소 정보 수정
     @PutMapping("/{id}")
     fun updateVenue(
         @PathVariable id: Int,
-        @RequestBody updatedVenueInfo: VenueInfo
-    ): ResponseEntity<VenueInfo> {
-        val updatedVenue = venueInfoService.updateVenue(id, updatedVenueInfo)
+        @RequestBody updatedVenueInfo: VenueInfoDTO
+    ): ResponseEntity<VenueInfoResponse> {
+        val geometryFactory = GeometryFactory()
+        val updatedInfo = VenueInfo(
+            ownerId = updatedVenueInfo.ownerId,
+            address = updatedVenueInfo.address,
+            rentalFee = updatedVenueInfo.rentalFee,
+            capacity = updatedVenueInfo.capacity,
+            area = updatedVenueInfo.area,
+            spaceType = updatedVenueInfo.spaceType,
+            location = geometryFactory.createPoint(Coordinate(updatedVenueInfo.longitude, updatedVenueInfo.latitude))
+        )
+        val updatedVenue = venueInfoService.updateVenue(id, updatedInfo)
         return if (updatedVenue.isPresent) {
-            ResponseEntity.ok(updatedVenue.get())
+            val photos = venuePhotoService.getPhotosByVenueId(id)
+            venuePhotoService.updateVenuePhoto(photos[0].photoId, updatedVenueInfo.mainImage)
+            ResponseEntity.ok(updatedInfo.location?.let {
+                VenueInfoResponse(
+                    ownerId = updatedInfo.ownerId,
+                    address = updatedInfo.address,
+                    rentalFee = updatedInfo.rentalFee!!,
+                    capacity = updatedInfo.capacity!!,
+                    area = updatedInfo.area,
+                    spaceType = updatedInfo.spaceType!!,
+                    longitude = it.x,
+                    latitude = it.y
+                )
+            })
         } else {
             ResponseEntity.notFound().build()
         }
     }
 
-
     // 좌표 범위 내 장소 검색
     @GetMapping("/search")
-    fun getVenuesWithinDistance(
-        @RequestParam("latitude") latitude: Double,
-        @RequestParam("longitude") longitude: Double,
-        @RequestParam("distance") distance: Double
-    ): ResponseEntity<List<VenueInfo>> {
+    fun getVenuesWithinDistance(@RequestBody coordinateInfo: CoordinateInfo, @RequestBody filter: VenueFilter?): ResponseEntity<List<VenueInfo>> {
         val geometryFactory = GeometryFactory()
-        val point: Point = geometryFactory.createPoint(Coordinate(longitude, latitude))  // 좌표는 (x, y) 순서로 사용
-        val venues = venueInfoService.getVenuesWithinDistance(point, distance)
+        val point: Point = geometryFactory.createPoint(Coordinate(coordinateInfo.longitude, coordinateInfo.latitude))  // 좌표는 (x, y) 순서로 사용
+        point.srid = 4326
+        val venues = venueInfoService.getVenuesWithinDistance(point, coordinateInfo.distance)
         return ResponseEntity.ok(venues)
     }
 
@@ -75,11 +129,14 @@ class VenueInfoController(
     @DeleteMapping("/{id}")
     fun deleteVenue(@PathVariable id: Int): ResponseEntity<Void> {
         venueInfoService.deleteVenue(id)
+        if(venuePhotoService.getPhotosByVenueId(id).size > 0){
+            venuePhotoService.deleteVenuePhotoByVenueId(id)
+        }
         return ResponseEntity.noContent().build()
     }
 
     // 장소 사진 조회
-    @GetMapping("/{venueId}")
+    @GetMapping("/photos/{venueId}")
     fun getPhotosByVenueId(@PathVariable venueId: Int): ResponseEntity<List<VenuePhoto>> {
         val photos = venuePhotoService.getPhotosByVenueId(venueId)
         return ResponseEntity.ok(photos)
@@ -93,10 +150,60 @@ class VenueInfoController(
     }
 
     // 장소 사진 삭제
-    @DeleteMapping("/{photoId}")
+    @DeleteMapping("/photos/{photoId}")
     fun deleteVenuePhoto(@PathVariable photoId: Int): ResponseEntity<Void> {
         venuePhotoService.deleteVenuePhoto(photoId)
         return ResponseEntity.noContent().build()
     }
 
+    /*
+     *추가하면 좋을 api
+     * 필터 기능 추가
+     * */
+
+//    @GetMapping("/searchFilter")
+//    fun searchVenueByFilter(@RequestParam filter : SearchFilter): ResponseEntity<List<VenueInfo>> {
+//        val venueInfo = venueInfoService.getVenueWithFilter(filter);
+//        return ResponseEntity.ok(venueInfo);
+//    }
 }
+
+data class CoordinateInfo (
+    val latitude: Double,
+    val longitude: Double,
+    val distance: Double
+)
+
+data class VenueInfoDTO(
+    val ownerId : Int,
+    val address : String,
+    val rentalFee : Double,
+    val capacity : Int,
+    val area : Double?,
+    val spaceType : String,
+    val latitude: Double,
+    val longitude: Double,
+    val mainImage : String //base64 형태로 전달받음
+)
+
+data class VenueInfoResponse(
+    val ownerId : Int,
+    val address : String,
+    val rentalFee : Double,
+    val capacity : Int,
+    val area : Double?,
+    val spaceType : String,
+    val latitude: Double,
+    val longitude: Double
+)
+
+data class VenueFilter(
+    val address : String?,
+    val minRentalFee : Double?,
+    val maxRentalFee : Double?,
+    val minCapacity : Int?,
+    val maxCapacity : Int?,
+    val minArea : Int?,
+    val maxArea : Int?,
+    val spaceType : String?
+)
