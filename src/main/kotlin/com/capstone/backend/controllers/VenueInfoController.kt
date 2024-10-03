@@ -117,12 +117,13 @@ class VenueInfoController(
 
     // 좌표 범위 내 장소 검색
     @GetMapping("/search")
-    fun getVenuesWithinDistance(@RequestBody coordinateInfo: CoordinateInfo, @RequestBody filter: VenueFilter?): ResponseEntity<List<VenueInfo>> {
+    fun getVenuesWithinDistance(@RequestBody searchRequest: SearchRequest): ResponseEntity<List<VenueInfo>> {
         val geometryFactory = GeometryFactory()
-        val point: Point = geometryFactory.createPoint(Coordinate(coordinateInfo.longitude, coordinateInfo.latitude))  // 좌표는 (x, y) 순서로 사용
+        val point: Point = geometryFactory.createPoint(Coordinate(searchRequest.coordinateInfo.longitude, searchRequest.coordinateInfo.latitude))  // 좌표는 (x, y) 순서로 사용
         point.srid = 4326
-        val venues = venueInfoService.getVenuesWithinDistance(point, coordinateInfo.distance)
-        return ResponseEntity.ok(venues)
+        val venues = venueInfoService.getVenuesWithinDistance(point, searchRequest.coordinateInfo.distance)
+
+        return ResponseEntity.ok(filtering(venues, searchRequest.filter))
     }
 
     // 장소 삭제
@@ -156,17 +157,32 @@ class VenueInfoController(
         return ResponseEntity.noContent().build()
     }
 
-    /*
-     *추가하면 좋을 api
-     * 필터 기능 추가
-     * */
+    fun filtering(venueList : List<VenueInfo>, filter: VenueFilter?) : List<VenueInfo> {
+        return if(filter == null) {
+            venueList
+        }
+        else{
+            venueList.filter { venueInfo ->
+                (filter.address == null || venueInfo.address.contains(filter.address)) &&
 
-//    @GetMapping("/searchFilter")
-//    fun searchVenueByFilter(@RequestParam filter : SearchFilter): ResponseEntity<List<VenueInfo>> {
-//        val venueInfo = venueInfoService.getVenueWithFilter(filter);
-//        return ResponseEntity.ok(venueInfo);
-//    }
+                (filter.minRentalFee == null || venueInfo.rentalFee!! >= filter.minRentalFee) &&
+                (filter.maxRentalFee == null || venueInfo.rentalFee!! <= filter.maxRentalFee) &&
+
+                (filter.minCapacity == null || venueInfo.capacity!! >= filter.minCapacity) &&
+
+                (filter.minArea == null || venueInfo.area!! >= filter.minArea) &&
+                (filter.maxArea == null || venueInfo.area!! <= filter.maxArea) &&
+
+                (filter.spaceType == null || venueInfo.spaceType!! == filter.spaceType)
+            }
+        }
+    }
 }
+
+data class SearchRequest(
+    val coordinateInfo: CoordinateInfo,
+    val filter: VenueFilter?
+)
 
 data class CoordinateInfo (
     val latitude: Double,
@@ -202,7 +218,6 @@ data class VenueFilter(
     val minRentalFee : Double?,
     val maxRentalFee : Double?,
     val minCapacity : Int?,
-    val maxCapacity : Int?,
     val minArea : Int?,
     val maxArea : Int?,
     val spaceType : String?
