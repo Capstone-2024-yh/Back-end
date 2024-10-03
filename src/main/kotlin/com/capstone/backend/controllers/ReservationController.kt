@@ -43,6 +43,12 @@ class ReservationController(private val reservationService: ReservationService) 
     // 새로운 예약 생성
     @PostMapping
     fun createReservation(@RequestBody reservationRequest: ReservationRequest): ResponseEntity<Reservation> {
+        val count = reservationService.checkReservationAtTime(reservationRequest.venueId, reservationRequest.startTime, reservationRequest.endTime)
+        if(count > 0){
+            println(count)
+            return ResponseEntity.notFound().build()
+        }
+
         val reservation = Reservation(
             userId = reservationRequest.userId,
             venueId = reservationRequest.venueId,
@@ -54,6 +60,12 @@ class ReservationController(private val reservationService: ReservationService) 
         )
         val savedReservation = reservationService.saveReservation(reservation)
         return ResponseEntity.status(HttpStatus.CREATED).body(savedReservation)
+    }
+
+    @DeleteMapping("/{reservationId}")
+    fun deleteReservation(@PathVariable reservationId: Int): ResponseEntity<Void> {
+        reservationService.deleteReservation(reservationId)
+        return ResponseEntity.noContent().build()
     }
 }
 

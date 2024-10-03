@@ -2,8 +2,6 @@ package com.capstone.backend.controllers
 
 import com.capstone.backend.Entity.VenueInfo
 import com.capstone.backend.Entity.VenuePhoto
-import com.capstone.backend.Repository.VenueInfoRepository
-import com.capstone.backend.Service.AuthService
 import com.capstone.backend.Service.VenueInfoService
 import com.capstone.backend.Service.VenuePhotoService
 import org.locationtech.jts.geom.GeometryFactory
@@ -18,7 +16,6 @@ import org.locationtech.jts.geom.Coordinate
 class VenueInfoController(
     private val venueInfoService: VenueInfoService,
     private val venuePhotoService: VenuePhotoService,
-    private val authService: AuthService
 ) {
 
     // 모든 장소 정보 조회
@@ -39,7 +36,7 @@ class VenueInfoController(
         }
     }
 
-    // 새로운 장소 추가
+    // 새로운 장소 추가(정리 필요)
     @PostMapping("/create")
     fun createVenue(
         @RequestBody venueInfoDTO: VenueInfoDTO
@@ -78,7 +75,7 @@ class VenueInfoController(
         return ResponseEntity.ok(resp)
     }
 
-    // 장소 정보 수정
+    // 장소 정보 수정(정리 필요)
     @PutMapping("/{id}")
     fun updateVenue(
         @PathVariable id: Int,
@@ -143,20 +140,23 @@ class VenueInfoController(
         return ResponseEntity.ok(photos)
     }
 
-    // 장소 사진 추가
+    // 장소 사진 추가(단독 사용 가능성은 없을 것으로 예상)
+    @Deprecated("Use any other venue management function")
     @PostMapping("/photos")
     fun saveVenuePhoto(@RequestBody venuePhoto: VenuePhoto): ResponseEntity<VenuePhoto> {
         val savedPhoto = venuePhotoService.saveVenuePhoto(venuePhoto)
         return ResponseEntity.ok(savedPhoto)
     }
 
-    // 장소 사진 삭제
+    // 장소 사진 삭제(단독 사용 가능성은 없을 것으로 예상)
+    @Deprecated("Use any other venue management function")
     @DeleteMapping("/photos/{photoId}")
     fun deleteVenuePhoto(@PathVariable photoId: Int): ResponseEntity<Void> {
         venuePhotoService.deleteVenuePhoto(photoId)
         return ResponseEntity.noContent().build()
     }
 
+    // 필터 기능(추후에 쿼리로 처리할 수 있게 변경 예정)
     fun filtering(venueList : List<VenueInfo>, filter: VenueFilter?) : List<VenueInfo> {
         return if(filter == null) {
             venueList
