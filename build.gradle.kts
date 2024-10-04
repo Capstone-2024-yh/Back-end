@@ -37,6 +37,8 @@ dependencies {
     developmentOnly("org.springframework.boot:spring-boot-devtools")
     implementation("org.postgresql:postgresql:42.7.2")
     implementation("org.postgis:postgis-jdbc:1.3.3")
+
+    implementation("org.hibernate:hibernate-core:6.2.8.Final") // 버전은 최신 안정 버전으로 조정하세요.
 }
 
 kotlin {
