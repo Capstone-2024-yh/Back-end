@@ -10,6 +10,6 @@ interface EquipmentRepository : JpaRepository<Equipment, Long> {
     // venueId로 Equipment 목록을 검색하는 메서드
     fun findByVenueId(venueId: Int): List<Equipment>
 
-    // 특정 기자재(equipment)로 검색하는 메서드
-    fun findByEquipment(equipment: String): List<Equipment>
+    // venueId와 EquipmentId로 목록을 검색하는 메서드
+    fun findByVenueIdAndEquipmentId(venueId: Int, equipmentId: Int) : Equipment?
 }
