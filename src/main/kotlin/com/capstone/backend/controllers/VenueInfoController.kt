@@ -129,6 +129,11 @@ class VenueInfoController(
         return ResponseEntity.ok(filtering(venues, searchRequest.filter))
     }
 
+    @PostMapping("/search")
+    fun getVenuesWithText() {
+        // 검색어를 받아서 해당하는 장소를 반환
+    }
+
     // 장소 삭제
     @DeleteMapping("/{id}")
     fun deleteVenue(@PathVariable id: Int): ResponseEntity<Void> {
