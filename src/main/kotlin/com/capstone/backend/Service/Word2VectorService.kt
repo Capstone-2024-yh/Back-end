@@ -35,8 +35,9 @@ typealias WordVectorMap = Map<String, List<Double>>
 class Word2VectorService {
 
     // Retrofit 인스턴스 생성
+    private final val word2vecHost = System.getProperty("Word2VecHost")
     private final val retrofit = Retrofit.Builder()
-        .baseUrl("http://localhost:8000/") // FastAPI 서버 URL
+        .baseUrl(word2vecHost) // FastAPI 서버 URL
         .addConverterFactory(GsonConverterFactory.create()) // JSON 파싱을 위한 Gson 컨버터
         .build()
 
