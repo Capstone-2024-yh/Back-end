@@ -2,6 +2,7 @@ package com.capstone.backend.controllers
 
 import com.capstone.backend.Entity.VenueInfo
 import com.capstone.backend.Entity.VenuePhoto
+import com.capstone.backend.Service.EquipmentService
 import com.capstone.backend.Service.VenueInfoService
 import com.capstone.backend.Service.VenuePhotoService
 import org.locationtech.jts.geom.GeometryFactory
@@ -16,6 +17,7 @@ import org.locationtech.jts.geom.Coordinate
 class VenueInfoController(
     private val venueInfoService: VenueInfoService,
     private val venuePhotoService: VenuePhotoService,
+    private val equipmentService: EquipmentService
 ) {
 
     // 모든 장소 정보 조회
@@ -51,8 +53,12 @@ class VenueInfoController(
             spaceType = venueInfoDTO.spaceType,
             location = geometryFactory.createPoint(Coordinate(venueInfoDTO.longitude, venueInfoDTO.latitude))
         )
-        // 필요한 필드를 venueInfo에 추가하거나 수정하세요.
         val createdVenue = venueInfoService.createVenue(venueInfo)
+        if(venueInfoDTO.equipments != null){
+            for(equip in venueInfoDTO.equipments){
+                //equipmentService.addEquipment(createdVenue.venueId, venueInfoDTO.equipments)
+            }
+        }
 
         val venuePhoto = VenuePhoto(
             venueId = createdVenue.venueId,
@@ -177,6 +183,11 @@ class VenueInfoController(
             }
         }
     }
+
+    @GetMapping("/EquipList")
+    fun getEquipmentList() : List<String>{
+        return equipmentService.getAllEquipmentList()
+    }
 }
 
 data class SearchRequest(
@@ -197,6 +208,7 @@ data class VenueInfoDTO(
     val capacity : Int,
     val area : Double?,
     val spaceType : String,
+    val equipments : List<String>?,
     val latitude: Double,
     val longitude: Double,
     val mainImage : String //base64 형태로 전달받음

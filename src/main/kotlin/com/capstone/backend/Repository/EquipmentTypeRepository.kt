@@ -3,6 +3,7 @@ package com.capstone.backend.Repository
 import com.capstone.backend.Entity.EquipmentType
 import org.springframework.data.jpa.repository.JpaRepository
 import org.springframework.data.jpa.repository.Query
+import org.springframework.data.repository.query.Param
 import org.springframework.stereotype.Repository
 
 @Repository
@@ -13,5 +14,7 @@ interface EquipmentTypeRepository : JpaRepository<EquipmentType, Int>{
     """, nativeQuery = true)
     fun getAllEquipmentTypeList(): List<String>
 
-    fun findByEquipment(equipment: String): EquipmentType
+    fun findByEquipment(equipment: String): List<EquipmentType>
+
+    fun getIdByEquipment(equipment: String): Int
 }
