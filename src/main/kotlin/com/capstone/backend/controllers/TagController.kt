@@ -32,21 +32,15 @@ class TagController(
     }
 
     // 새로운 VenueTag 생성
-    @PostMapping
-    fun createVenueTag(@RequestBody venueTag: VenueTag): ResponseEntity<VenueTag> {
+    @PostMapping("/create")
+    fun createVenueTag(@RequestBody venueTag: VenueTagRequest): ResponseEntity<VenueTag> {
         val createdTag = tagService.createVenueTag(venueTag.venueId, venueTag.tag)
         return ResponseEntity.ok(createdTag)
     }
-
-//        // 모든 VenueTag 레코드 조회
-//        @GetMapping
-//        fun getAllVenueTags(): ResponseEntity<List<VenueTag>> {
-//            val tags = tagService.getAllVenueTags()
-//            return ResponseEntity.ok(tags)
-//        }
-//
-//
-
-//
-
 }
+
+// DTO 정의
+data class VenueTagRequest(
+    val venueId: Int,
+    val tag: String
+)
