@@ -25,12 +25,12 @@ class AuthController(
 
     // 로그인
     @PostMapping("/login")
-    fun login(@RequestBody loginRequest: LoginRequest): ResponseEntity<String> {
-        val success = authService.login(loginRequest.email, loginRequest.password)
+    fun login(@RequestBody loginRequest: LoginRequest): ResponseEntity<Int> {
+        val (success, userId) = authService.login(loginRequest.email, loginRequest.password)
         return if (success) {
-            ResponseEntity.ok("Login successful")
+            ResponseEntity.ok(userId)
         } else {
-            ResponseEntity.status(401).body("Invalid credentials")
+            ResponseEntity.status(401).body(0)
         }
     }
 
