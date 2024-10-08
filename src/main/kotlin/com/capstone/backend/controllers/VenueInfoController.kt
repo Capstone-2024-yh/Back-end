@@ -1,7 +1,6 @@
 package com.capstone.backend.Controller
 
 import com.capstone.backend.Entity.VenueInfo
-import com.capstone.backend.Entity.VenuePhoto
 import com.capstone.backend.Service.VenueInfoService
 import com.capstone.backend.Service.VenuePhotoService
 import com.capstone.backend.Service.EquipmentService
