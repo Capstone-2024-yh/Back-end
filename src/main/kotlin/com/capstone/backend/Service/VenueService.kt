@@ -36,7 +36,15 @@ class VenueInfoService(private val venueInfoRepository: VenueInfoRepository) {
                 capacity = updatedVenueInfo.capacity,
                 area = updatedVenueInfo.area,
                 spaceType = updatedVenueInfo.spaceType,
-                location = updatedVenueInfo.location
+                location = updatedVenueInfo.location,
+                name = updatedVenueInfo.name,  // 추가된 필드
+                simpleDescription = updatedVenueInfo.simpleDescription,  // 추가된 필드
+                description = updatedVenueInfo.description,  // 추가된 필드
+                facilityInfo = updatedVenueInfo.facilityInfo,  // 추가된 필드
+                precautions = updatedVenueInfo.precautions,  // 추가된 필드
+                refundPolicy = updatedVenueInfo.refundPolicy,  // 추가된 필드
+                websiteURL = updatedVenueInfo.websiteURL,  // 추가된 필드
+                detailAddress = updatedVenueInfo.detailAddress  // 추가된 필드
             )
             Optional.of(venueInfoRepository.save(venueToUpdate))
         } else {
