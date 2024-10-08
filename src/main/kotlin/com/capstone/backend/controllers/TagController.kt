@@ -33,8 +33,8 @@ class TagController(
 
     // 새로운 VenueTag 생성
     @PostMapping("/create")
-    fun createVenueTag(@RequestBody venueTag: VenueTagRequest): ResponseEntity<VenueTag> {
-        val createdTag = tagService.createVenueTag(venueTag.venueId, venueTag.tag)
+    fun createVenueTag(@RequestBody venueTag: VenueTagRequest): ResponseEntity<List<VenueTag>> {
+        val createdTag = tagService.createVenueTags(venueTag.venueId, venueTag.tags)
         return ResponseEntity.ok(createdTag)
     }
 }
@@ -42,5 +42,5 @@ class TagController(
 // DTO 정의
 data class VenueTagRequest(
     val venueId: Int,
-    val tag: String
+    val tags: List<String>
 )
