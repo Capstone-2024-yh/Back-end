@@ -17,6 +17,6 @@ interface VenueTagRepository : JpaRepository<VenueTag, Long> {
 
 //    벡터로 유사 검색하는 쿼리 나중에 구현 해야 함 지금 그냥 임시 쿼리임
     @Query("SELECT v FROM VenueTag v")  // 모든 VenueTag 반환 (임시 쿼리)
-    fun findBySimilarTag(@Param("vector") vector: List<Double>): List<VenueTag>
+    fun findBySimilarTag(@Param("vector") vector: Map<String, FloatArray>): List<VenueTag>
 
 }

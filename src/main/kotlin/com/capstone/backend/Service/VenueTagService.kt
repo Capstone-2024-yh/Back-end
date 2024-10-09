@@ -6,7 +6,6 @@ import kotlinx.coroutines.runBlocking
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
 
-
 @Service
 class VenueTagService(
     private val venueTagRepository: VenueTagRepository,
@@ -24,41 +23,28 @@ class VenueTagService(
 
     fun getVenueTagsBySimilarTag(tags: List<String>): List<VenueTag> {
         val vectors = runBlocking {
-            val result = w2v.getWord2Vector(tags)
-            result.values.flatten()
+            w2v.getWord2Vector(tags)
         }
         return venueTagRepository.findBySimilarTag(vectors)
     }
-
-    // 새로운 VenueTag 생성
-//    @Transactional
-//    fun createVenueTag(venueId: Int, tag: String): VenueTag {
-//        return venueTagRepository.save(VenueTag(
-//            venueId = venueId,
-//            tag = tag,
-//            vector = runBlocking {
-//                val result = w2v.getWord2Vector(listOf(tag))  // 코루틴 블록 내에서 suspend 함수 호출
-//                result[tag] ?: throw IllegalArgumentException("Word2Vec API returned no result")
-//            }
-//        ))
-//    }
 
     //새로운 VenueTag 생성
     @Transactional
     fun createVenueTags(venueId: Int, tags: List<String>): List<VenueTag> {
         val vectors = runBlocking {
-            val result = w2v.getWord2Vector(tags)
-            result
+            // Word2Vec API에서 벡터를 얻어오는 부분
+            w2v.getWord2Vector(tags)
         }
-        return venueTagRepository.saveAll(tags.map {
+        return venueTagRepository.saveAll(tags.map { tag ->
+            val vector = vectors[tag] ?: throw IllegalArgumentException("Word2Vec API returned no result")
             VenueTag(
                 venueId = venueId,
-                tag = it,
-                vector = vectors[it] ?: throw IllegalArgumentException("Word2Vec API returned no result")
+                tag = tag,
+                vector = vector
             )
+
         })
     }
-
     // VenueTag 삭제
     @Transactional
     fun deleteVenueTag(id: Long) {

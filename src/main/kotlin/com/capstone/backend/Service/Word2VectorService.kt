@@ -12,12 +12,11 @@ import retrofit2.http.Path
 
 
 interface Word2VecApiService {
-
     // FastAPI의 "/word2vec" 엔드포인트로 POST 요청을 보냅니다
     @POST("/word2vec")
     suspend fun getWordVectors(
         @Body request: Word2VecRequest
-    ): Map<String, List<Double>> // 단어와 벡터를 담은 맵을 반환
+    ): Map<String, FloatArray> // 단어와 벡터를 담은 맵을 반환
 }
 
 // 요청 데이터 클래스
@@ -26,14 +25,13 @@ data class Word2VecRequest(
 )
 
 // 응답 데이터 클래스 (단어와 벡터를 담는 구조)
-typealias WordVectorMap = Map<String, List<Double>>
+typealias WordVectorMap = Map<String, FloatArray>
 
 
 
 
 @Service
 class Word2VectorService {
-
     // Retrofit 인스턴스 생성
     private final val word2vecHost = System.getProperty("Word2VecHost")
     private final val retrofit = Retrofit.Builder()
@@ -43,7 +41,6 @@ class Word2VectorService {
 
     // API 서비스 생성
     val apiService = retrofit.create(Word2VecApiService::class.java)
-
 
     suspend fun getWord2Vector(words: List<String>): WordVectorMap {
         return try {

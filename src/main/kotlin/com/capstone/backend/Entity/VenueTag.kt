@@ -4,8 +4,6 @@ import jakarta.persistence.*
 import org.hibernate.annotations.JdbcTypeCode
 import org.hibernate.type.SqlTypes
 import java.time.LocalDateTime
-import com.pgvector.PGvector
-
 
 @Entity
 @Table(
@@ -32,15 +30,33 @@ data class VenueTag(
     @Column(name = "created_at", insertable = false, updatable = false)
     val createdAt: LocalDateTime? = null,
 
-    @JdbcTypeCode(SqlTypes.ARRAY)
+    @JdbcTypeCode(SqlTypes.VECTOR)
     @Column(name = "vector", columnDefinition = "vector")
-    val vector: PGvector
-
+    val vector: FloatArray
 
 ) {
-    // PGvector를 FloatArray 로 변환하여 반환하는 메서드
-    fun getListFromPGVector(): FloatArray {
-        return this.vector.toArray()
+    override fun equals(other: Any?): Boolean {
+        if (this === other) return true
+        if (javaClass != other?.javaClass) return false
+
+        other as VenueTag
+
+        if (id != other.id) return false
+        if (venueId != other.venueId) return false
+        if (tag != other.tag) return false
+        if (createdAt != other.createdAt) return false
+        if (!vector.contentEquals(other.vector)) return false
+
+        return true
+    }
+
+    override fun hashCode(): Int {
+        var result = id ?: 0
+        result = 31 * result + venueId
+        result = 31 * result + tag.hashCode()
+        result = 31 * result + (createdAt?.hashCode() ?: 0)
+        result = 31 * result + vector.contentHashCode()
+        return result
     }
 }
 
