@@ -45,6 +45,7 @@ dependencies {
     implementation("com.squareup.retrofit2:converter-gson:2.9.0")
     implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.6.4") // 코루틴 사용
 
+    implementation("com.pgvector:pgvector:0.1.6") // PGvector 라이브러리
 
 }
 
