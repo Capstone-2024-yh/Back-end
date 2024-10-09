@@ -21,7 +21,7 @@ repositories {
 
 dependencies {
     implementation("org.springframework.boot:spring-boot-starter-data-jpa")
-    implementation("org.hibernate:hibernate-spatial:6.5.2.Final")
+    implementation("org.hibernate:hibernate-spatial:6.2.8.Final")
     implementation("org.springframework.boot:spring-boot-starter-web")
     implementation("com.fasterxml.jackson.module:jackson-module-kotlin")
     implementation("org.jetbrains.kotlin:kotlin-reflect")
