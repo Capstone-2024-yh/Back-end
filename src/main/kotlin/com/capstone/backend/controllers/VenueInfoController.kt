@@ -19,13 +19,12 @@ class VenueInfoController(
     private val venuePhotoService: VenuePhotoService,
     private val equipmentService: EquipmentService
 ) {
-
-    // 모든 장소 정보 조회
-//    @GetMapping
-//    fun getAllVenues(): ResponseEntity<List<VenueInfo>> {
-//        val venues = venueInfoService.getAllVenues()
-//        return ResponseEntity.ok(venues)
-//    }
+    @Deprecated("Paging 기법으로 제공할 예정")
+    @GetMapping("/AllSearch")
+    fun getAllVenues(): ResponseEntity<List<VenueInfo>> {
+        val venues = venueInfoService.getAllVenues()
+        return ResponseEntity.ok(venues)
+    }
 
     // ID로 특정 장소 조회
     @GetMapping("/{id}")
@@ -42,7 +41,7 @@ class VenueInfoController(
     @PostMapping("/create")
     fun createVenue(
         @RequestBody venueInfoDTO: VenueInfoDTO
-    ): ResponseEntity<VenueInfoResponse> {
+    ): ResponseEntity<VenueInfoDTO> {
         val geometryFactory = GeometryFactory()
         val venueInfo = VenueInfo(
             ownerId = venueInfoDTO.ownerId,
@@ -54,20 +53,9 @@ class VenueInfoController(
             location = geometryFactory.createPoint(Coordinate(venueInfoDTO.longitude, venueInfoDTO.latitude))
         )
         val createdVenue = venueInfoService.createVenue(venueInfo)
-        if(venueInfoDTO.equipments != null){
-            for(equip in venueInfoDTO.equipments){
-                //equipmentService.addEquipment(createdVenue.venueId, venueInfoDTO.equipments)
-            }
-        }
-
-        val venuePhoto = VenuePhoto(
-            venueId = createdVenue.venueId,
-            photoBase64 = venueInfoDTO.mainImage
-        )
-        venuePhotoService.saveVenuePhoto(venuePhoto)
 
         val resp = createdVenue.location?.let {
-            VenueInfoResponse(
+            VenueInfoDTO(
                 ownerId = createdVenue.ownerId,
                 address = createdVenue.address,
                 rentalFee = createdVenue.rentalFee!!,
@@ -86,7 +74,7 @@ class VenueInfoController(
     fun updateVenue(
         @PathVariable id: Int,
         @RequestBody updatedVenueInfo: VenueInfoDTO
-    ): ResponseEntity<VenueInfoResponse> {
+    ): ResponseEntity<VenueInfoDTO> {
         val geometryFactory = GeometryFactory()
         val updatedInfo = VenueInfo(
             ownerId = updatedVenueInfo.ownerId,
@@ -99,10 +87,8 @@ class VenueInfoController(
         )
         val updatedVenue = venueInfoService.updateVenue(id, updatedInfo)
         return if (updatedVenue.isPresent) {
-            val photos = venuePhotoService.getPhotosByVenueId(id)
-            venuePhotoService.updateVenuePhoto(photos[0].photoId, updatedVenueInfo.mainImage)
             ResponseEntity.ok(updatedInfo.location?.let {
-                VenueInfoResponse(
+                VenueInfoDTO(
                     ownerId = updatedInfo.ownerId,
                     address = updatedInfo.address,
                     rentalFee = updatedInfo.rentalFee!!,
@@ -119,7 +105,7 @@ class VenueInfoController(
     }
 
     // 좌표 범위 내 장소 검색
-    @GetMapping("/search")
+    @GetMapping("/locationSearch")
     fun getVenuesWithinDistance(@RequestBody searchRequest: SearchRequest): ResponseEntity<List<VenueInfo>> {
         val geometryFactory = GeometryFactory()
         val point: Point = geometryFactory.createPoint(Coordinate(searchRequest.coordinateInfo.longitude, searchRequest.coordinateInfo.latitude))  // 좌표는 (x, y) 순서로 사용
@@ -139,28 +125,6 @@ class VenueInfoController(
         return ResponseEntity.noContent().build()
     }
 
-    // 장소 사진 조회
-    @GetMapping("/photos/{venueId}")
-    fun getPhotosByVenueId(@PathVariable venueId: Int): ResponseEntity<List<VenuePhoto>> {
-        val photos = venuePhotoService.getPhotosByVenueId(venueId)
-        return ResponseEntity.ok(photos)
-    }
-
-    // 장소 사진 추가(단독 사용 가능성은 없을 것으로 예상)
-    @Deprecated("Use any other venue management function")
-    @PostMapping("/photos")
-    fun saveVenuePhoto(@RequestBody venuePhoto: VenuePhoto): ResponseEntity<VenuePhoto> {
-        val savedPhoto = venuePhotoService.saveVenuePhoto(venuePhoto)
-        return ResponseEntity.ok(savedPhoto)
-    }
-
-    // 장소 사진 삭제(단독 사용 가능성은 없을 것으로 예상)
-    @Deprecated("Use any other venue management function")
-    @DeleteMapping("/photos/{photoId}")
-    fun deleteVenuePhoto(@PathVariable photoId: Int): ResponseEntity<Void> {
-        venuePhotoService.deleteVenuePhoto(photoId)
-        return ResponseEntity.noContent().build()
-    }
 
     // 필터 기능(추후에 쿼리로 처리할 수 있게 변경 예정)
     fun filtering(venueList : List<VenueInfo>, filter: VenueFilter?) : List<VenueInfo> {
@@ -183,11 +147,6 @@ class VenueInfoController(
             }
         }
     }
-
-    @GetMapping("/EquipList")
-    fun getEquipmentList() : List<String>{
-        return equipmentService.getAllEquipmentList()
-    }
 }
 
 data class SearchRequest(
@@ -202,19 +161,6 @@ data class CoordinateInfo (
 )
 
 data class VenueInfoDTO(
-    val ownerId : Int,
-    val address : String,
-    val rentalFee : Double,
-    val capacity : Int,
-    val area : Double?,
-    val spaceType : String,
-    val equipments : List<String>?,
-    val latitude: Double,
-    val longitude: Double,
-    val mainImage : String //base64 형태로 전달받음
-)
-
-data class VenueInfoResponse(
     val ownerId : Int,
     val address : String,
     val rentalFee : Double,

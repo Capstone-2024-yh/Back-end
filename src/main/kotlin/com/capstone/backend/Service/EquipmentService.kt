@@ -1,28 +1,30 @@
 package com.capstone.backend.Service
 
 import com.capstone.backend.Entity.Equipment
+import com.capstone.backend.Entity.EquipmentType
 import com.capstone.backend.Repository.EquipmentRepository
 import com.capstone.backend.Repository.EquipmentTypeRepository
 import org.springframework.stereotype.Service
+import java.util.*
 
 @Service
 class EquipmentService(
     private val equipmentRepository: EquipmentRepository,
-    private val equipmentTypeRepository: EquipmentTypeRepository,
-    private val equipmentTypeService: EquipmentTypeService
+    private val equipmentTypeRepository: EquipmentTypeRepository
 ) {
 
     fun getEquipmentByVenueId(venueId: Int): List<Equipment> {
         return equipmentRepository.findByVenueId(venueId)
     }
 
-    fun addEquipment(venueId: Int, equipmentId: Int) {
+    fun addEquipment(venueId: Int, equipmentId: Int) : Equipment {
         val e = Equipment(
             venueId = venueId,
             equipmentId = equipmentId,
             hasEquipment = 1
         )
         equipmentRepository.save(e)
+        return e
     }
 
     fun addEquipments(venueId: Int, equipments: List<Equipment>) {
@@ -48,9 +50,9 @@ class EquipmentService(
         }
     }
 
-    fun updateEquipments(venueId: Int, equipmentTypeIds: List<Int>) {
+    fun updateEquipments(venueId: Int, equipmentTypeIds: List<Int>) : Optional<List<Equipment>> {
         // 입력받은 equipment_type_id 리스트가 비어 있으면 작업을 하지 않음
-        if (equipmentTypeIds.isEmpty()) return
+        if (equipmentTypeIds.isEmpty()) return Optional.empty()
 
         // DB에서 해당 venueId의 모든 equipment_type_id를 가져옴
         val existingEquipments = equipmentRepository.findByVenueId(venueId)
@@ -75,6 +77,9 @@ class EquipmentService(
         if (equipmentToRemove.isNotEmpty()) {
             equipmentRepository.deleteByVenueIdAndEquipmentTypeIds(venueId, equipmentToRemove)
         }
+
+        val equipList = equipmentRepository.findByVenueId(venueId)
+        return Optional.of(equipList);
     }
 
     fun deleteEquipment(venueId: Int, equipmentId: Int) {
@@ -99,5 +104,15 @@ class EquipmentService(
 
     fun getAllEquipmentList() : List<String>{
         return equipmentTypeRepository.getAllEquipmentTypeList()
+    }
+
+    fun addEquipmentType(equipmentType: String) {
+        val type = equipmentTypeRepository.findByEquipment(equipmentType)
+        if(type.isEmpty()){
+            val equipType = EquipmentType(
+                equipment = equipmentType
+            )
+            equipmentTypeRepository.save(equipType)
+        }
     }
 }

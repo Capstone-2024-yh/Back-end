@@ -9,9 +9,7 @@ import org.springframework.stereotype.Repository
 @Repository
 interface EquipmentTypeRepository : JpaRepository<EquipmentType, Int>{
     //모든 EquipmentType 데이터를 String 형태로 전달
-    @Query(value = """
-        select t.equipment from equipment_type t
-    """, nativeQuery = true)
+    @Query("select t.equipment from EquipmentType t")
     fun getAllEquipmentTypeList(): List<String>
 
     fun findByEquipment(equipment: String): List<EquipmentType>
