@@ -36,6 +36,6 @@ class VenuePhotoService(
     }
 
     fun deleteVenuePhotoByVenueId(venueId: Int) {
-        venuePhotoRepository.deleteById(venueId)
+        venuePhotoRepository.deleteVenuePhotoByVenueId(venueId)
     }
 }

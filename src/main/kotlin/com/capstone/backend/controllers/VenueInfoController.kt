@@ -17,6 +17,12 @@ class VenueInfoController(
     private val venuePhotoService: VenuePhotoService,
     private val equipmentService: EquipmentService
 ) {
+    @Deprecated("Paging 기법으로 제공할 예정")
+    @GetMapping("/AllSearch")
+    fun getAllVenues(): ResponseEntity<List<VenueInfo>> {
+        val venues = venueInfoService.getAllVenues()
+        return ResponseEntity.ok(venues)
+    }
 
     // ID로 특정 장소 조회
     @GetMapping("/{id}")
@@ -53,7 +59,6 @@ class VenueInfoController(
             detailAddress = venueInfoDTO.detailAddress
         )
         val createdVenue = venueInfoService.createVenue(venueInfo)
-
 
         val resp = createdVenue.location?.let {
             VenueInfoResponse(
@@ -115,7 +120,7 @@ class VenueInfoController(
     }
 
     // 좌표 범위 내 장소 검색
-    @GetMapping("/search")
+    @GetMapping("/locationSearch")
     fun getVenuesWithinDistance(@RequestBody searchRequest: SearchRequest): ResponseEntity<List<VenueInfo>> {
         val geometryFactory = GeometryFactory()
         val point: Point = geometryFactory.createPoint(Coordinate(searchRequest.coordinateInfo.longitude, searchRequest.coordinateInfo.latitude))  // 좌표는 (x, y) 순서로 사용
@@ -150,12 +155,6 @@ class VenueInfoController(
                         (filter.spaceType == null || venueInfo.spaceType!! == filter.spaceType)
             }
         }
-    }
-
-    // 기자재 리스트 조회
-    @GetMapping("/EquipList")
-    fun getEquipmentList(): List<String> {
-        return equipmentService.getAllEquipmentList()
     }
 }
 
