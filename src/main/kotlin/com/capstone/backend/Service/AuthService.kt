@@ -29,9 +29,9 @@ class AuthService(
 
     // 로그인
     @Transactional(readOnly = true)
-    fun login(email: String, password: String): Boolean {
+    fun login(email: String, password: String): Pair<Boolean, Int> {
         val user = userRepository.findByEmail(email)
-        val hashedPassword = user?.passwordHash ?: return false
+        val hashedPassword = user?.passwordHash ?: return Pair(false, 0)
 
         // 비밀번호 일치 여부 확인
         val isOk = BCrypt.checkpw(password, hashedPassword)
@@ -39,7 +39,7 @@ class AuthService(
             // 세션에 사용자 ID 저장하여 로그인 상태 유지
             session.setAttribute("userId", user.userId)
         }
-        return isOk
+        return Pair(isOk, user.userId)
     }
 
     // 로그아웃

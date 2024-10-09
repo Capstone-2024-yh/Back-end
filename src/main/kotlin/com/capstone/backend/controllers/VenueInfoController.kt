@@ -1,16 +1,14 @@
-package com.capstone.backend.controllers
+package com.capstone.backend.Controller
 
 import com.capstone.backend.Entity.VenueInfo
-import com.capstone.backend.Entity.VenuePhoto
-import com.capstone.backend.Service.EquipmentService
 import com.capstone.backend.Service.VenueInfoService
 import com.capstone.backend.Service.VenuePhotoService
-import org.locationtech.jts.geom.GeometryFactory
+import com.capstone.backend.Service.EquipmentService
 import org.springframework.http.ResponseEntity
 import org.springframework.web.bind.annotation.*
-import org.locationtech.jts.geom.Point
 import org.locationtech.jts.geom.Coordinate
-
+import org.locationtech.jts.geom.Point
+import org.locationtech.jts.geom.GeometryFactory
 
 @RestController
 @RequestMapping("/venues")
@@ -37,7 +35,7 @@ class VenueInfoController(
         }
     }
 
-    // 새로운 장소 추가(정리 필요)
+    // 새로운 장소 추가
     @PostMapping("/create")
     fun createVenue(
         @RequestBody venueInfoDTO: VenueInfoDTO
@@ -50,7 +48,15 @@ class VenueInfoController(
             capacity = venueInfoDTO.capacity,
             area = venueInfoDTO.area,
             spaceType = venueInfoDTO.spaceType,
-            location = geometryFactory.createPoint(Coordinate(venueInfoDTO.longitude, venueInfoDTO.latitude))
+            location = geometryFactory.createPoint(Coordinate(venueInfoDTO.longitude, venueInfoDTO.latitude)),
+            name = venueInfoDTO.name,
+            simpleDescription = venueInfoDTO.simpleDescription,
+            description = venueInfoDTO.description,
+            facilityInfo = venueInfoDTO.facilityInfo,
+            precautions = venueInfoDTO.precautions,
+            refundPolicy = venueInfoDTO.refundPolicy,
+            websiteURL = venueInfoDTO.websiteURL,
+            detailAddress = venueInfoDTO.detailAddress
         )
         val createdVenue = venueInfoService.createVenue(venueInfo)
 
@@ -69,7 +75,7 @@ class VenueInfoController(
         return ResponseEntity.ok(resp)
     }
 
-    // 장소 정보 수정(정리 필요)
+    // 장소 정보 수정
     @PutMapping("/{id}")
     fun updateVenue(
         @PathVariable id: Int,
@@ -83,22 +89,31 @@ class VenueInfoController(
             capacity = updatedVenueInfo.capacity,
             area = updatedVenueInfo.area,
             spaceType = updatedVenueInfo.spaceType,
-            location = geometryFactory.createPoint(Coordinate(updatedVenueInfo.longitude, updatedVenueInfo.latitude))
+            location = geometryFactory.createPoint(Coordinate(updatedVenueInfo.longitude, updatedVenueInfo.latitude)),
+            name = updatedVenueInfo.name,
+            simpleDescription = updatedVenueInfo.simpleDescription,
+            description = updatedVenueInfo.description,
+            facilityInfo = updatedVenueInfo.facilityInfo,
+            precautions = updatedVenueInfo.precautions,
+            refundPolicy = updatedVenueInfo.refundPolicy,
+            websiteURL = updatedVenueInfo.websiteURL,
+            detailAddress = updatedVenueInfo.detailAddress
         )
         val updatedVenue = venueInfoService.updateVenue(id, updatedInfo)
         return if (updatedVenue.isPresent) {
-            ResponseEntity.ok(updatedInfo.location?.let {
-                VenueInfoDTO(
-                    ownerId = updatedInfo.ownerId,
-                    address = updatedInfo.address,
-                    rentalFee = updatedInfo.rentalFee!!,
-                    capacity = updatedInfo.capacity!!,
-                    area = updatedInfo.area,
-                    spaceType = updatedInfo.spaceType!!,
+            val resp = updatedVenue.get().location?.let {
+                VenueInfoResponse(
+                    ownerId = updatedVenue.get().ownerId,
+                    address = updatedVenue.get().address,
+                    rentalFee = updatedVenue.get().rentalFee!!,
+                    capacity = updatedVenue.get().capacity!!,
+                    area = updatedVenue.get().area,
+                    spaceType = updatedVenue.get().spaceType!!,
                     longitude = it.x,
                     latitude = it.y
                 )
-            })
+            }
+            ResponseEntity.ok(resp)
         } else {
             ResponseEntity.notFound().build()
         }
@@ -119,35 +134,31 @@ class VenueInfoController(
     @DeleteMapping("/{id}")
     fun deleteVenue(@PathVariable id: Int): ResponseEntity<Void> {
         venueInfoService.deleteVenue(id)
-        if(venuePhotoService.getPhotosByVenueId(id).size > 0){
+        if(venuePhotoService.getPhotosByVenueId(id).isNotEmpty()){
             venuePhotoService.deleteVenuePhotoByVenueId(id)
         }
         return ResponseEntity.noContent().build()
     }
 
-
-    // 필터 기능(추후에 쿼리로 처리할 수 있게 변경 예정)
-    fun filtering(venueList : List<VenueInfo>, filter: VenueFilter?) : List<VenueInfo> {
-        return if(filter == null) {
+    // 필터링 기능
+    fun filtering(venueList: List<VenueInfo>, filter: VenueFilter?): List<VenueInfo> {
+        return if (filter == null) {
             venueList
-        }
-        else{
+        } else {
             venueList.filter { venueInfo ->
                 (filter.address == null || venueInfo.address.contains(filter.address)) &&
-
-                (filter.minRentalFee == null || venueInfo.rentalFee!! >= filter.minRentalFee) &&
-                (filter.maxRentalFee == null || venueInfo.rentalFee!! <= filter.maxRentalFee) &&
-
-                (filter.minCapacity == null || venueInfo.capacity!! >= filter.minCapacity) &&
-
-                (filter.minArea == null || venueInfo.area!! >= filter.minArea) &&
-                (filter.maxArea == null || venueInfo.area!! <= filter.maxArea) &&
-
-                (filter.spaceType == null || venueInfo.spaceType!! == filter.spaceType)
+                        (filter.minRentalFee == null || venueInfo.rentalFee!! >= filter.minRentalFee) &&
+                        (filter.maxRentalFee == null || venueInfo.rentalFee!! <= filter.maxRentalFee) &&
+                        (filter.minCapacity == null || venueInfo.capacity!! >= filter.minCapacity) &&
+                        (filter.minArea == null || venueInfo.area!! >= filter.minArea) &&
+                        (filter.maxArea == null || venueInfo.area!! <= filter.maxArea) &&
+                        (filter.spaceType == null || venueInfo.spaceType!! == filter.spaceType)
             }
         }
     }
 }
+
+// DTO 및 서브 클래스들
 
 data class SearchRequest(
     val coordinateInfo: CoordinateInfo,
@@ -161,22 +172,41 @@ data class CoordinateInfo (
 )
 
 data class VenueInfoDTO(
-    val ownerId : Int,
-    val address : String,
-    val rentalFee : Double,
-    val capacity : Int,
-    val area : Double?,
-    val spaceType : String,
+    val ownerId: Int,
+    val address: String,
+    val rentalFee: Double,
+    val capacity: Int,
+    val area: Double?,
+    val spaceType: String,
+    val latitude: Double,
+    val longitude: Double,
+    val name: String?,  // 추가
+    val simpleDescription: String?,  // 추가
+    val description: String?,  // 추가
+    val facilityInfo: String?,  // 추가
+    val precautions: String?,  // 추가
+    val refundPolicy: String?,  // 추가
+    val websiteURL: String?,  // 추가
+    val detailAddress: String?  // 추가
+)
+
+data class VenueInfoResponse(
+    val ownerId: Int,
+    val address: String,
+    val rentalFee: Double,
+    val capacity: Int,
+    val area: Double?,
+    val spaceType: String,
     val latitude: Double,
     val longitude: Double
 )
 
 data class VenueFilter(
-    val address : String?,
-    val minRentalFee : Double?,
-    val maxRentalFee : Double?,
-    val minCapacity : Int?,
-    val minArea : Int?,
-    val maxArea : Int?,
-    val spaceType : String?
+    val address: String?,
+    val minRentalFee: Double?,
+    val maxRentalFee: Double?,
+    val minCapacity: Int?,
+    val minArea: Int?,
+    val maxArea: Int?,
+    val spaceType: String?
 )

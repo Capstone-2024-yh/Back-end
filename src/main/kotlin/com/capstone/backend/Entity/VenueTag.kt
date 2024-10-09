@@ -25,7 +25,7 @@ data class VenueTag(
     val venueId: Int,
 
     @Column(name = "tag", length = 255)
-    val tag: String? = null,
+    val tag: String,
 
     @Column(name = "created_at", insertable = false, updatable = false)
     val createdAt: LocalDateTime? = null,
