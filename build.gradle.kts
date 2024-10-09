@@ -21,7 +21,7 @@ repositories {
 
 dependencies {
     implementation("org.springframework.boot:spring-boot-starter-data-jpa")
-    implementation("org.hibernate:hibernate-spatial:6.2.8.Final")
+    implementation("org.hibernate:hibernate-spatial:6.2.8.Final") // 공간 관련 기능 유지
     implementation("org.springframework.boot:spring-boot-starter-web")
     implementation("com.fasterxml.jackson.module:jackson-module-kotlin")
     implementation("org.jetbrains.kotlin:kotlin-reflect")
@@ -38,14 +38,12 @@ dependencies {
     implementation("org.postgresql:postgresql:42.7.2")
     implementation("org.postgis:postgis-jdbc:1.3.3")
 
-    implementation("org.hibernate:hibernate-core:6.2.8.Final") // 버전은 최신 안정 버전으로 조정하세요.
-
+    implementation("org.hibernate:hibernate-core:6.4.0.Final") // Hibernate 6.4로 업그레이드
+    implementation("org.hibernate.orm:hibernate-vector:6.4.0.Final") // Hibernate 벡터 모듈 추가
 
     implementation("com.squareup.retrofit2:retrofit:2.9.0")
     implementation("com.squareup.retrofit2:converter-gson:2.9.0")
     implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.6.4") // 코루틴 사용
-
-    implementation("com.pgvector:pgvector:0.1.6") // PGvector 라이브러리
 
 }
 
