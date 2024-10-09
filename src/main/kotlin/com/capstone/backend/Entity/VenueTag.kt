@@ -1,9 +1,11 @@
 package com.capstone.backend.Entity
 
 import jakarta.persistence.*
-import java.time.LocalDateTime
 import org.hibernate.annotations.JdbcTypeCode
 import org.hibernate.type.SqlTypes
+import java.time.LocalDateTime
+import com.pgvector.PGvector
+
 
 @Entity
 @Table(
@@ -31,8 +33,15 @@ data class VenueTag(
     val createdAt: LocalDateTime? = null,
 
     @JdbcTypeCode(SqlTypes.ARRAY)
-    @Column(name = "vector", columnDefinition = "double precision[]")
-    val vector: List<Double>? = null
-)
+    @Column(name = "vector", columnDefinition = "vector")
+    val vector: PGvector
+
+
+) {
+    // PGvector를 FloatArray 로 변환하여 반환하는 메서드
+    fun getListFromPGVector(): FloatArray {
+        return this.vector.toArray()
+    }
+}
 
 
