@@ -39,7 +39,7 @@ class VenueInfoController(
     @PostMapping("/create")
     fun createVenue(
         @RequestBody venueInfoDTO: VenueInfoDTO
-    ): ResponseEntity<VenueInfoDTO> {
+    ): ResponseEntity<VenueInfoResponse> {
         val geometryFactory = GeometryFactory()
         val venueInfo = VenueInfo(
             ownerId = venueInfoDTO.ownerId,
@@ -61,7 +61,7 @@ class VenueInfoController(
         val createdVenue = venueInfoService.createVenue(venueInfo)
 
         val resp = createdVenue.location?.let {
-            VenueInfoDTO(
+            VenueInfoResponse(
                 ownerId = createdVenue.ownerId,
                 address = createdVenue.address,
                 rentalFee = createdVenue.rentalFee!!,
@@ -80,7 +80,7 @@ class VenueInfoController(
     fun updateVenue(
         @PathVariable id: Int,
         @RequestBody updatedVenueInfo: VenueInfoDTO
-    ): ResponseEntity<VenueInfoDTO> {
+    ): ResponseEntity<VenueInfoResponse> {
         val geometryFactory = GeometryFactory()
         val updatedInfo = VenueInfo(
             ownerId = updatedVenueInfo.ownerId,
