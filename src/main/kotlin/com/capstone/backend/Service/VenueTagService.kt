@@ -35,15 +35,19 @@ class VenueTagService(
             // Word2Vec API에서 벡터를 얻어오는 부분
             w2v.getWord2Vector(tags)
         }
-        return venueTagRepository.saveAll(tags.map { tag ->
+
+        tags.forEach { tag ->
             val vector = vectors[tag] ?: throw IllegalArgumentException("Word2Vec API returned no result")
+            venueTagRepository.upsertVenueTag(venueId, tag, vector)
+        }
+
+        return tags.map { tag ->
             VenueTag(
                 venueId = venueId,
                 tag = tag,
-                vector = vector
+                vector = vectors[tag] ?: throw IllegalArgumentException("Word2Vec API returned no result")
             )
-
-        })
+        }
     }
     // VenueTag 삭제
     @Transactional
