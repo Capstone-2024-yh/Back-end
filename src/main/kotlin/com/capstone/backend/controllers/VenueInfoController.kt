@@ -40,6 +40,7 @@ class VenueInfoController(
                     spaceType = venue.get().spaceType!!,
                     latitude = venue.get().location!!.y,
                     longitude = venue.get().location!!.x,
+                    name = venue.get().name,
                     simpleDescription = venue.get().simpleDescription,
                     description = venue.get().description,
                     facilityInfo = venue.get().facilityInfo,
@@ -90,6 +91,7 @@ class VenueInfoController(
                 spaceType = createdVenue.spaceType!!,
                 longitude = it.x,
                 latitude = it.y,
+                name = createdVenue.name,
                 simpleDescription = createdVenue.simpleDescription,
                 description = createdVenue.description,
                 facilityInfo = createdVenue.facilityInfo,
@@ -139,6 +141,7 @@ class VenueInfoController(
                     spaceType = updatedVenue.get().spaceType!!,
                     longitude = it.x,
                     latitude = it.y,
+                    name = updatedVenueInfo.name,
                     simpleDescription = updatedVenueInfo.simpleDescription,
                     description = updatedVenueInfo.description,
                     facilityInfo = updatedVenueInfo.facilityInfo,
@@ -234,7 +237,8 @@ data class VenueInfoResponse(
     val area: Double?,
     val spaceType: String,
     val latitude: Double,
-    val longitude: Double,  // 추가
+    val longitude: Double,
+    val name: String?,  // 추가
     val simpleDescription: String?,  // 추가
     val description: String?,  // 추가
     val facilityInfo: String?,  // 추가
