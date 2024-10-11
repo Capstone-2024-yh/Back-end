@@ -26,10 +26,29 @@ class VenueInfoController(
 
     // ID로 특정 장소 조회
     @GetMapping("/{id}")
-    fun getVenueById(@PathVariable id: Int): ResponseEntity<VenueInfo> {
+    fun getVenueById(@PathVariable id: Int): ResponseEntity<VenueInfoResponse> {
         val venue = venueInfoService.getVenueById(id)
         return if (venue.isPresent) {
-            ResponseEntity.ok(venue.get())
+            ResponseEntity.ok(
+                VenueInfoResponse(
+                    venueId = venue.get().venueId,
+                    ownerId = venue.get().ownerId,
+                    address = venue.get().address,
+                    rentalFee = venue.get().rentalFee!!,
+                    area = venue.get().area,
+                    capacity = venue.get().capacity!!,
+                    spaceType = venue.get().spaceType!!,
+                    latitude = venue.get().location!!.y,
+                    longitude = venue.get().location!!.x,
+                    simpleDescription = venue.get().simpleDescription,
+                    description = venue.get().description,
+                    facilityInfo = venue.get().facilityInfo,
+                    precautions = venue.get().precautions,
+                    refundPolicy = venue.get().refundPolicy,
+                    websiteURL = venue.get().websiteURL,
+                    detailAddress = venue.get().detailAddress
+                )
+            )
         } else {
             ResponseEntity.notFound().build()
         }
@@ -62,6 +81,7 @@ class VenueInfoController(
 
         val resp = createdVenue.location?.let {
             VenueInfoResponse(
+                venueId = createdVenue.venueId,
                 ownerId = createdVenue.ownerId,
                 address = createdVenue.address,
                 rentalFee = createdVenue.rentalFee!!,
@@ -69,7 +89,14 @@ class VenueInfoController(
                 area = createdVenue.area,
                 spaceType = createdVenue.spaceType!!,
                 longitude = it.x,
-                latitude = it.y
+                latitude = it.y,
+                simpleDescription = createdVenue.simpleDescription,
+                description = createdVenue.description,
+                facilityInfo = createdVenue.facilityInfo,
+                precautions = createdVenue.precautions,
+                refundPolicy = createdVenue.refundPolicy,
+                websiteURL = createdVenue.websiteURL,
+                detailAddress = createdVenue.detailAddress
             )
         }
         return ResponseEntity.ok(resp)
@@ -103,6 +130,7 @@ class VenueInfoController(
         return if (updatedVenue.isPresent) {
             val resp = updatedVenue.get().location?.let {
                 VenueInfoResponse(
+                    venueId = updatedVenue.get().venueId,
                     ownerId = updatedVenue.get().ownerId,
                     address = updatedVenue.get().address,
                     rentalFee = updatedVenue.get().rentalFee!!,
@@ -110,7 +138,14 @@ class VenueInfoController(
                     area = updatedVenue.get().area,
                     spaceType = updatedVenue.get().spaceType!!,
                     longitude = it.x,
-                    latitude = it.y
+                    latitude = it.y,
+                    simpleDescription = updatedVenueInfo.simpleDescription,
+                    description = updatedVenueInfo.description,
+                    facilityInfo = updatedVenueInfo.facilityInfo,
+                    precautions = updatedVenueInfo.precautions,
+                    refundPolicy = updatedVenueInfo.refundPolicy,
+                    websiteURL = updatedVenueInfo.websiteURL,
+                    detailAddress = updatedVenueInfo.detailAddress,
                 )
             }
             ResponseEntity.ok(resp)
@@ -191,6 +226,7 @@ data class VenueInfoDTO(
 )
 
 data class VenueInfoResponse(
+    val venueId : Int,
     val ownerId: Int,
     val address: String,
     val rentalFee: Double,
@@ -198,7 +234,14 @@ data class VenueInfoResponse(
     val area: Double?,
     val spaceType: String,
     val latitude: Double,
-    val longitude: Double
+    val longitude: Double,  // 추가
+    val simpleDescription: String?,  // 추가
+    val description: String?,  // 추가
+    val facilityInfo: String?,  // 추가
+    val precautions: String?,  // 추가
+    val refundPolicy: String?,  // 추가
+    val websiteURL: String?,  // 추가
+    val detailAddress: String?  // 추가
 )
 
 data class VenueFilter(
