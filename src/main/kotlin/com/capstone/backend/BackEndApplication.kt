@@ -16,6 +16,7 @@ fun main(args: Array<String>) {
     System.setProperty("Word2VecHost", dotenv["Word2VecHost"])
     System.setProperty("GPT_AUTH", dotenv["GPT_AUTH"])
     System.setProperty("GPT_ASSISTANCE", dotenv["GPT_ASSISTANCE"])
+    System.setProperty("GPT_TOKEN", dotenv["GPT_TOKEN"])
 
     runApplication<BackEndApplication>(*args)
 }

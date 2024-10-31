@@ -1,6 +1,7 @@
 package com.capstone.backend.controllers
 
 import com.capstone.backend.Service.GptService
+import com.capstone.backend.Service.TokenListDTO
 import org.springframework.http.ResponseEntity
 import org.springframework.web.bind.annotation.PostMapping
 import org.springframework.web.bind.annotation.RequestBody
@@ -18,6 +19,12 @@ class GptController(
     ): ResponseEntity<String> {
         val respon = gptService.getResponse(question.question)
         return ResponseEntity.ok(respon)
+    }
+
+    @PostMapping("/MakeToken")
+    fun makeToken(@RequestBody question: Question): ResponseEntity<TokenListDTO> {
+        val response = gptService.getToken(question.question)
+        return ResponseEntity.ok(response)
     }
 }
 
