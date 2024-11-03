@@ -1,14 +1,9 @@
 package com.capstone.backend.Service
 
-import com.capstone.backend.Controller.VenueInfoResponse
-import com.capstone.backend.Repository.SearchVenueRepository
 import org.springframework.stereotype.Service
-import java.rmi.server.UID
 
 @Service
-class SearchService(
-    private val searchVenueRepository: SearchVenueRepository
-) {
+class SearchService() {
 
 //    fun searchVenues(searchRequest: SearchRequest): List<VenueInfoResponse> {
 //        val results = searchVenueRepository.findByCriteria(
