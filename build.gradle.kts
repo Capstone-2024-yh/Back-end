@@ -45,6 +45,10 @@ dependencies {
     implementation("com.squareup.retrofit2:converter-gson:2.9.0")
     implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.6.4") // 코루틴 사용
 
+    implementation("com.github.haifengl:smile-core:3.0.0")
+    implementation("com.github.haifengl:smile-clustering:3.0.0")
+    implementation("com.github.haifengl:smile-data:3.0.0")   // DenseMatrix가 포함된 모듈
+    implementation("com.github.haifengl:smile-math:3.0.0")    // 수학 연산을 위한 모듈
 }
 
 kotlin {

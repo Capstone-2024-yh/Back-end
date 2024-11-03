@@ -12,4 +12,6 @@ interface SearchTokenRepository : JpaRepository<SearchToken, Int> {
     fun findByToken(token: String): List<SearchToken>
 
     fun findByUserIdAndToken(userId: Int, token: String): List<SearchToken>
+
+    fun findAllByVectorIsNotNull(): List<SearchToken>
 }
