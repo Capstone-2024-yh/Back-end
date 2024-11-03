@@ -4,6 +4,7 @@ import com.capstone.backend.Entity.VenueInfo
 import com.capstone.backend.Service.VenueInfoService
 import com.capstone.backend.Service.VenuePhotoService
 import com.capstone.backend.Service.EquipmentService
+import com.capstone.backend.Service.VenueTagByDescriptionService
 import org.springframework.http.ResponseEntity
 import org.springframework.web.bind.annotation.*
 import org.locationtech.jts.geom.Coordinate
@@ -15,7 +16,8 @@ import org.locationtech.jts.geom.GeometryFactory
 class VenueInfoController(
     private val venueInfoService: VenueInfoService,
     private val venuePhotoService: VenuePhotoService,
-    private val equipmentService: EquipmentService
+    private val equipmentService: EquipmentService,
+    private val venueTagByDescriptionService: VenueTagByDescriptionService,
 ) {
     @Deprecated("Paging 기법으로 제공할 예정")
     @GetMapping("/AllSearch")
@@ -78,6 +80,14 @@ class VenueInfoController(
             websiteURL = venueInfoDTO.websiteURL,
             detailAddress = venueInfoDTO.detailAddress
         )
+
+        //gpt 서비스로 토큰들 설명에 대한 토큰들 뽑아오기
+        //여기에 설명들 넣어서 테ㅐ그 뽑아오는 함수들 넣기
+
+        //뽑아돈 토큰들 벡터 만들어서 저장하기
+        val tags: List<String> = listOf("태그1", "태그2", "태그3") //이건 에러 안나라고 임시로 해둔거임
+        venueTagByDescriptionService.createVenueTags(venueInfo.venueId, tags)
+
         val createdVenue = venueInfoService.createVenue(venueInfo)
 
         val resp = createdVenue.location?.let {
