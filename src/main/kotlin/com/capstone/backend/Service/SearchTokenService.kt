@@ -2,11 +2,15 @@ package com.capstone.backend.Service
 
 import com.capstone.backend.Entity.SearchToken
 import com.capstone.backend.Repository.SearchTokenRepository
+import kotlinx.coroutines.runBlocking
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
 
 @Service
-class SearchTokenService(private val searchTokenRepository: SearchTokenRepository) {
+class SearchTokenService(
+    private val searchTokenRepository: SearchTokenRepository,
+    private val w2v: Word2VectorService
+) {
 
     fun getTokensByUserId(userId: Int): List<SearchToken> {
         return searchTokenRepository.findByUserId(userId)
@@ -21,8 +25,19 @@ class SearchTokenService(private val searchTokenRepository: SearchTokenRepositor
     }
 
     @Transactional
-    fun saveSearchToken(searchToken: SearchToken): SearchToken {
-        return searchTokenRepository.save(searchToken)
+    fun saveSearchTokens(userId: Int, tokens :List<String>): List<SearchToken> {
+        val vectors = runBlocking {
+            w2v.getWord2Vector(tokens)
+        }
+
+        val searchTokens = tokens.map { token ->
+            SearchToken(
+                userId = userId,
+                token = token,
+                vector = vectors[token] ?: throw IllegalArgumentException("Word2Vec API returned no result")
+            )
+        }
+        return searchTokenRepository.saveAll(searchTokens)
     }
 
     @Transactional
