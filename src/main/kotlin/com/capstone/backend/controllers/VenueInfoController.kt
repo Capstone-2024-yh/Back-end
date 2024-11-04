@@ -82,14 +82,18 @@ class VenueInfoController(
         val createdVenue = venueInfoService.createVenue(venueInfo)
 
         //gpt 서비스로 토큰들 설명에 대한 토큰들 뽑아오기
-        //여기에 설명들 넣어서 태그 뽑아오는 함수들 넣기
-        val tokens = gptService.getToken(venueInfoDTO.description!!)
+        val tokens = gptService.getToken(
+            venueInfoDTO.description +
+            venueInfo.simpleDescription +
+            venueInfo.facilityInfo +
+            venueInfo.precautions +
+            venueInfo.refundPolicy + ""
+        )
+
         val tags : MutableList<String> = ArrayList()
-        if(tokens != null){
-            for(token in tokens.Tokens){
-                if(token.Subject != "Strange" && token.Subject != "NULL"){
-                    tags.add(token.Token)
-                }
+        tokens?.Tokens?.forEach {
+            if(it.Subject != "Strange" && it.Subject != "NULL"){
+                tags.add(it.Token)
             }
         }
 
