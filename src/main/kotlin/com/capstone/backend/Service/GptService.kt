@@ -2,9 +2,7 @@ package com.capstone.backend.Service
 
 import com.fasterxml.jackson.annotation.JsonProperty
 import com.fasterxml.jackson.databind.ObjectMapper
-import com.fasterxml.jackson.databind.SerializationFeature
 import com.fasterxml.jackson.module.kotlin.registerKotlinModule
-import com.google.gson.Gson
 import org.springframework.stereotype.Service
 import retrofit2.Call
 import retrofit2.Retrofit
@@ -169,6 +167,9 @@ class GptService {
                             if (System.currentTimeMillis() - startTime > maxWaitTimeMillis) {
                                 throw RuntimeException("Timeout exceeded while waiting for completion.")
                             }
+                            else if(status == "failed") {
+                                throw RuntimeException("Run Failed")
+                            }
                         }
                     } else {
                         throw RuntimeException("Failed to check run status: ${checkRunResponse.errorBody()?.string()}")
@@ -184,9 +185,10 @@ class GptService {
                 if (messageResponse.isSuccessful) {
                     return try{
                         val result = messageResponse.body()?.data?.get(0)?.content?.last()?.text?.value
-                        println(result)
+                        val res = result?.replace("```json", "")?.replace("```", "")?.trim()
+                        println(res)
                         val mapper = ObjectMapper().registerKotlinModule()
-                        mapper.readValue(result, TokenListDTO::class.java)
+                        mapper.readValue(res, TokenListDTO::class.java)
                     }
                     catch(e: Exception) {
                         println(e)

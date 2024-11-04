@@ -1,10 +1,7 @@
 package com.capstone.backend.Controller
 
 import com.capstone.backend.Entity.VenueInfo
-import com.capstone.backend.Service.VenueInfoService
-import com.capstone.backend.Service.VenuePhotoService
-import com.capstone.backend.Service.EquipmentService
-import com.capstone.backend.Service.VenueTagByDescriptionService
+import com.capstone.backend.Service.*
 import org.springframework.http.ResponseEntity
 import org.springframework.web.bind.annotation.*
 import org.locationtech.jts.geom.Coordinate
@@ -18,6 +15,7 @@ class VenueInfoController(
     private val venuePhotoService: VenuePhotoService,
     private val equipmentService: EquipmentService,
     private val venueTagByDescriptionService: VenueTagByDescriptionService,
+    private val gptService: GptService
 ) {
     @Deprecated("Paging 기법으로 제공할 예정")
     @GetMapping("/AllSearch")
@@ -81,14 +79,22 @@ class VenueInfoController(
             detailAddress = venueInfoDTO.detailAddress
         )
 
+        val createdVenue = venueInfoService.createVenue(venueInfo)
+
         //gpt 서비스로 토큰들 설명에 대한 토큰들 뽑아오기
-        //여기에 설명들 넣어서 테ㅐ그 뽑아오는 함수들 넣기
+        //여기에 설명들 넣어서 태그 뽑아오는 함수들 넣기
+        val tokens = gptService.getToken(venueInfoDTO.description!!)
+        val tags : MutableList<String> = ArrayList()
+        if(tokens != null){
+            for(token in tokens.Tokens){
+                if(token.Subject != "Strange" && token.Subject != "NULL"){
+                    tags.add(token.Token)
+                }
+            }
+        }
 
         //뽑아돈 토큰들 벡터 만들어서 저장하기
-        val tags: List<String> = listOf("태그1", "태그2", "태그3") //이건 에러 안나라고 임시로 해둔거임
-        venueTagByDescriptionService.createVenueTags(venueInfo.venueId, tags)
-
-        val createdVenue = venueInfoService.createVenue(venueInfo)
+        venueTagByDescriptionService.createVenueTags(createdVenue.venueId, tags)
 
         val resp = createdVenue.location?.let {
             VenueInfoResponse(
