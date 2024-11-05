@@ -19,7 +19,7 @@ class SearchController(
 ) {
 
     @PostMapping("/searchKeyword")
-    fun searchVenues(@RequestBody searchRequest: SearchRequest): ResponseEntity<List<VenueInfoResponse>> {
+    fun searchVenues(@RequestBody searchRequest: SearchRequest): ResponseEntity<List<VenueScoreResponse>> {
 
 //        gpt로 태그 뽑아 오면 서치 토큰에 저장 하는 로직 넣아야 함
         val tokens = gptService.getToken(searchRequest.keyword)
@@ -32,10 +32,10 @@ class SearchController(
 
         // 검색에 활용된 토큰들을 저장 함
         val searchTokens = searchTokenService.saveSearchTokens(searchRequest.uid, str)
+        val vectors = searchTokens.map { it.vector }
 
-//        val searchResults = searchService.searchVenues(searchRequest)
-//        return ResponseEntity.ok(searchResults)
-        return ResponseEntity.ok(emptyList())
+        val searchResults = searchService.findTopVenuesBySimilarity(vectors)
+        return ResponseEntity.ok(searchResults)
     }
 }
 

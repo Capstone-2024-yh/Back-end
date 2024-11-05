@@ -32,4 +32,20 @@ interface VenueTagRepository : JpaRepository<VenueTag, Long> {
     @Query("SELECT v FROM VenueTag v")  // 모든 VenueTag 반환 (임시 쿼리)
     fun findBySimilarTag(@Param("vector") vector: Map<String, FloatArray>): List<VenueTag>
 
+
+    @Query(
+        value = """
+        SELECT vt.venue_id AS venueId, 1 - (vt.vector <-> :vector) AS similarity
+        FROM venue_tag vt
+        ORDER BY similarity DESC
+        LIMIT 50
+       """, nativeQuery = true
+    )
+    fun findSimilarTagsWithScore(@Param("vector") vector: FloatArray): List<SimilarityScore>
+
+}
+
+interface SimilarityScore {
+    val venueId: Int
+    val similarity: Double
 }
