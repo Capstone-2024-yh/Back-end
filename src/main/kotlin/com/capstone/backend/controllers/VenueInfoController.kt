@@ -1,9 +1,7 @@
 package com.capstone.backend.Controller
 
 import com.capstone.backend.Entity.VenueInfo
-import com.capstone.backend.Service.VenueInfoService
-import com.capstone.backend.Service.VenuePhotoService
-import com.capstone.backend.Service.EquipmentService
+import com.capstone.backend.Service.*
 import org.springframework.http.ResponseEntity
 import org.springframework.web.bind.annotation.*
 import org.locationtech.jts.geom.Coordinate
@@ -15,7 +13,9 @@ import org.locationtech.jts.geom.GeometryFactory
 class VenueInfoController(
     private val venueInfoService: VenueInfoService,
     private val venuePhotoService: VenuePhotoService,
-    private val equipmentService: EquipmentService
+    private val equipmentService: EquipmentService,
+    private val venueTagByDescriptionService: VenueTagByDescriptionService,
+    private val gptService: GptService
 ) {
     @Deprecated("Paging 기법으로 제공할 예정")
     @GetMapping("/AllSearch")
@@ -78,7 +78,27 @@ class VenueInfoController(
             websiteURL = venueInfoDTO.websiteURL,
             detailAddress = venueInfoDTO.detailAddress
         )
+
         val createdVenue = venueInfoService.createVenue(venueInfo)
+
+        //gpt 서비스로 토큰들 설명에 대한 토큰들 뽑아오기
+        val tokens = gptService.getToken(
+            venueInfoDTO.description +
+            venueInfo.simpleDescription +
+            venueInfo.facilityInfo +
+            venueInfo.precautions +
+            venueInfo.refundPolicy + ""
+        )
+
+        val tags : MutableList<String> = ArrayList()
+        tokens?.Tokens?.forEach {
+            if(it.Subject != "Strange" && it.Subject != "NULL"){
+                tags.add(it.Token)
+            }
+        }
+
+        //뽑아돈 토큰들 벡터 만들어서 저장하기
+        venueTagByDescriptionService.createVenueTags(createdVenue.venueId, tags)
 
         val resp = createdVenue.location?.let {
             VenueInfoResponse(
