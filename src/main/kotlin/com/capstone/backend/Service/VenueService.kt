@@ -57,6 +57,27 @@ class VenueInfoService(private val venueInfoRepository: VenueInfoRepository) {
         return venueInfoRepository.findVenuesWithinDistance(point, distance)
     }
 
+    //장소 유형으로 장소 검색
+    fun getVenuesByType(type: String): Optional<List<VenueInfo>> {
+        val list = venueInfoRepository.findVenueInfoBySpaceType(type)
+        return if (!list.isPresent){
+            Optional.empty()
+        }
+        else{
+            list
+        }
+    }
+
+    fun getVenuesByAddressName(addressName: String): Optional<List<VenueInfo>> {
+        val list = venueInfoRepository.findVenueInfoByAddressName(addressName)
+        return if(list.isPresent){
+            list
+        }
+        else{
+            Optional.empty()
+        }
+    }
+
     // 장소 삭제
     fun deleteVenue(venueId: Int) {
         venueInfoRepository.deleteById(venueId)

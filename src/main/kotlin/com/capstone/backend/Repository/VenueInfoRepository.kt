@@ -5,6 +5,7 @@ import org.springframework.data.jpa.repository.JpaRepository
 import org.springframework.data.repository.query.Param
 import org.springframework.data.jpa.repository.Query
 import org.locationtech.jts.geom.Point
+import java.util.*
 
 interface VenueInfoRepository : JpaRepository<VenueInfo, Int> {
 
@@ -18,4 +19,11 @@ interface VenueInfoRepository : JpaRepository<VenueInfo, Int> {
         @Param("distance") distance: Double
     ): List<VenueInfo>
 
+    fun findVenueInfoBySpaceType(spaceType: String): Optional<List<VenueInfo>>
+
+    @Query(value = """
+        SELECT * FROM venue_info v 
+        WHERE v.address LIKE :address || '%'
+    """, nativeQuery = true)
+    fun findVenueInfoByAddressName(@Param("address") addressName: String): Optional<List<VenueInfo>>
 }
