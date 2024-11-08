@@ -1,6 +1,7 @@
 package com.capstone.backend.Controller
 
 import com.capstone.backend.Entity.VenueInfo
+import com.capstone.backend.Repository.SimpleVenue
 import com.capstone.backend.Service.*
 import org.springframework.http.ResponseEntity
 import org.springframework.web.bind.annotation.*
@@ -14,15 +15,29 @@ import java.util.Optional
 class VenueInfoController(
     private val venueInfoService: VenueInfoService,
     private val venuePhotoService: VenuePhotoService,
-    private val equipmentService: EquipmentService,
     private val venueTagByDescriptionService: VenueTagByDescriptionService,
     private val gptService: GptService
 ) {
     @Deprecated("Paging 기법으로 제공할 예정")
     @GetMapping("/AllSearch")
-    fun getAllVenues(): ResponseEntity<List<VenueInfo>> {
+    fun getAllVenues(): ResponseEntity<List<VenueInfoResponse>> {
         val venues = venueInfoService.getAllVenues()
-        return ResponseEntity.ok(venues)
+        return if(!venues.isEmpty()){
+            val ret : MutableList<VenueInfoResponse> = mutableListOf()
+            for(element in venues){
+                val t = toResponseVenueInfo(element)
+                if(t.isPresent) ret.add(t.get())
+            }
+            if(ret.size > 0){
+                ResponseEntity.ok(ret.toList())
+            }
+            else{
+                ResponseEntity.notFound().build()
+            }
+        }
+        else{
+            ResponseEntity.notFound().build()
+        }
     }
 
     // ID로 특정 장소 조회
@@ -120,19 +135,21 @@ class VenueInfoController(
 
     // 좌표 범위 내 장소 검색
     @GetMapping("/locationSearch")
-    fun getVenuesWithinDistance(@RequestBody searchRequest: SearchRequest): ResponseEntity<List<VenueInfo>> {
+    fun getVenuesWithinDistance(@RequestParam latitude: Double,
+                                @RequestParam longitude: Double,
+                                @RequestParam distance: Double): ResponseEntity<List<SimpleVenue>> {
         val geometryFactory = GeometryFactory()
-        val point: Point = geometryFactory.createPoint(Coordinate(searchRequest.coordinateInfo.longitude, searchRequest.coordinateInfo.latitude))  // 좌표는 (x, y) 순서로 사용
+        val point: Point = geometryFactory.createPoint(Coordinate(longitude, latitude))  // 좌표는 (x, y) 순서로 사용
         point.srid = 4326
-        val venues = venueInfoService.getVenuesWithinDistance(point, searchRequest.coordinateInfo.distance)
+        val venues = venueInfoService.getVenuesWithinDistance(point, distance)
 
-        return ResponseEntity.ok(filtering(venues, searchRequest.filter))
+        return ResponseEntity.ok(venues)
     }
 
     //장소 유형으로 장소 목록 가져오기
     @GetMapping("/typeSearch")
-    fun getVenueByVenueType(@RequestBody type: venueType): ResponseEntity<List<VenueInfoResponse>> {
-        val list = venueInfoService.getVenuesByType(type.type)
+    fun getVenueByVenueType(@RequestParam type : String): ResponseEntity<List<VenueInfoResponse>> {
+        val list = venueInfoService.getVenuesByType(type)
         return if(!list.isPresent){
             ResponseEntity.notFound().build()
         }
@@ -173,7 +190,19 @@ class VenueInfoController(
         }
     }
 
-    // 장소 삭제
+    @GetMapping("/regionSearch")
+    fun getRegionVenue(@RequestBody regionName: regionName): ResponseEntity<List<SimpleVenue>> {
+        val list = venueInfoService.getVenueListByAddressName(regionName.si)
+        return if(list.isPresent){
+            ResponseEntity.ok(list.get())
+        }
+        else{
+            ResponseEntity.notFound().build()
+        }
+    }
+
+
+        // 장소 삭제
     @DeleteMapping("/{id}")
     fun deleteVenue(@PathVariable id: Int): ResponseEntity<Void> {
         venueInfoService.deleteVenue(id)
@@ -270,6 +299,7 @@ data class VenueInfoDTO(
     val detailAddress: String?  // 추가
 )
 
+//Location 데이터를 해석하지 못하는 문제를 해결하기 위한 DTO
 data class VenueInfoResponse(
     val venueId : Int,
     val ownerId: Int,

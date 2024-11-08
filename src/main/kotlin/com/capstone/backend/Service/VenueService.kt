@@ -1,6 +1,7 @@
 package com.capstone.backend.Service
 
 import com.capstone.backend.Entity.VenueInfo
+import com.capstone.backend.Repository.SimpleVenue
 import com.capstone.backend.Repository.VenueInfoRepository
 import org.springframework.stereotype.Service
 import java.util.*
@@ -53,7 +54,7 @@ class VenueInfoService(private val venueInfoRepository: VenueInfoRepository) {
     }
 
     // 좌표 범위 내 장소 검색
-    fun getVenuesWithinDistance(point: Point, distance: Double): List<VenueInfo> {
+    fun getVenuesWithinDistance(point: Point, distance: Double): List<SimpleVenue> {
         return venueInfoRepository.findVenuesWithinDistance(point, distance)
     }
 
@@ -71,6 +72,16 @@ class VenueInfoService(private val venueInfoRepository: VenueInfoRepository) {
     fun getVenuesByAddressName(addressName: String): Optional<List<VenueInfo>> {
         val list = venueInfoRepository.findVenueInfoByAddressName(addressName)
         return if(list.isPresent){
+            list
+        }
+        else{
+            Optional.empty()
+        }
+    }
+
+    fun getVenueListByAddressName(addressName: String) : Optional<List<SimpleVenue>>{
+        val list = venueInfoRepository.findSimpleVenueInfoByAddressName(addressName)
+        return if(list.get().isNotEmpty()){
             list
         }
         else{
