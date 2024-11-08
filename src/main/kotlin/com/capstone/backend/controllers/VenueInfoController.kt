@@ -1,27 +1,43 @@
 package com.capstone.backend.Controller
 
 import com.capstone.backend.Entity.VenueInfo
+import com.capstone.backend.Repository.SimpleVenue
 import com.capstone.backend.Service.*
 import org.springframework.http.ResponseEntity
 import org.springframework.web.bind.annotation.*
 import org.locationtech.jts.geom.Coordinate
 import org.locationtech.jts.geom.Point
 import org.locationtech.jts.geom.GeometryFactory
+import java.util.Optional
 
 @RestController
 @RequestMapping("/venues")
 class VenueInfoController(
     private val venueInfoService: VenueInfoService,
     private val venuePhotoService: VenuePhotoService,
-    private val equipmentService: EquipmentService,
     private val venueTagByDescriptionService: VenueTagByDescriptionService,
     private val gptService: GptService
 ) {
     @Deprecated("Paging 기법으로 제공할 예정")
     @GetMapping("/AllSearch")
-    fun getAllVenues(): ResponseEntity<List<VenueInfo>> {
+    fun getAllVenues(): ResponseEntity<List<VenueInfoResponse>> {
         val venues = venueInfoService.getAllVenues()
-        return ResponseEntity.ok(venues)
+        return if(!venues.isEmpty()){
+            val ret : MutableList<VenueInfoResponse> = mutableListOf()
+            for(element in venues){
+                val t = toResponseVenueInfo(element)
+                if(t.isPresent) ret.add(t.get())
+            }
+            if(ret.size > 0){
+                ResponseEntity.ok(ret.toList())
+            }
+            else{
+                ResponseEntity.notFound().build()
+            }
+        }
+        else{
+            ResponseEntity.notFound().build()
+        }
     }
 
     // ID로 특정 장소 조회
@@ -29,27 +45,7 @@ class VenueInfoController(
     fun getVenueById(@PathVariable id: Int): ResponseEntity<VenueInfoResponse> {
         val venue = venueInfoService.getVenueById(id)
         return if (venue.isPresent) {
-            ResponseEntity.ok(
-                VenueInfoResponse(
-                    venueId = venue.get().venueId,
-                    ownerId = venue.get().ownerId,
-                    address = venue.get().address,
-                    rentalFee = venue.get().rentalFee!!,
-                    area = venue.get().area,
-                    capacity = venue.get().capacity!!,
-                    spaceType = venue.get().spaceType!!,
-                    latitude = venue.get().location!!.y,
-                    longitude = venue.get().location!!.x,
-                    name = venue.get().name,
-                    simpleDescription = venue.get().simpleDescription,
-                    description = venue.get().description,
-                    facilityInfo = venue.get().facilityInfo,
-                    precautions = venue.get().precautions,
-                    refundPolicy = venue.get().refundPolicy,
-                    websiteURL = venue.get().websiteURL,
-                    detailAddress = venue.get().detailAddress
-                )
-            )
+            ResponseEntity.ok(toResponseVenueInfo(venue.get()).get())
         } else {
             ResponseEntity.notFound().build()
         }
@@ -100,28 +96,8 @@ class VenueInfoController(
         //뽑아돈 토큰들 벡터 만들어서 저장하기
         venueTagByDescriptionService.createVenueTags(createdVenue.venueId, tags)
 
-        val resp = createdVenue.location?.let {
-            VenueInfoResponse(
-                venueId = createdVenue.venueId,
-                ownerId = createdVenue.ownerId,
-                address = createdVenue.address,
-                rentalFee = createdVenue.rentalFee!!,
-                capacity = createdVenue.capacity!!,
-                area = createdVenue.area,
-                spaceType = createdVenue.spaceType!!,
-                longitude = it.x,
-                latitude = it.y,
-                name = createdVenue.name,
-                simpleDescription = createdVenue.simpleDescription,
-                description = createdVenue.description,
-                facilityInfo = createdVenue.facilityInfo,
-                precautions = createdVenue.precautions,
-                refundPolicy = createdVenue.refundPolicy,
-                websiteURL = createdVenue.websiteURL,
-                detailAddress = createdVenue.detailAddress
-            )
-        }
-        return ResponseEntity.ok(resp)
+        val resp = toResponseVenueInfo(createdVenue)
+        return ResponseEntity.ok(resp.get())
     }
 
     // 장소 정보 수정
@@ -150,28 +126,8 @@ class VenueInfoController(
         )
         val updatedVenue = venueInfoService.updateVenue(id, updatedInfo)
         return if (updatedVenue.isPresent) {
-            val resp = updatedVenue.get().location?.let {
-                VenueInfoResponse(
-                    venueId = updatedVenue.get().venueId,
-                    ownerId = updatedVenue.get().ownerId,
-                    address = updatedVenue.get().address,
-                    rentalFee = updatedVenue.get().rentalFee!!,
-                    capacity = updatedVenue.get().capacity!!,
-                    area = updatedVenue.get().area,
-                    spaceType = updatedVenue.get().spaceType!!,
-                    longitude = it.x,
-                    latitude = it.y,
-                    name = updatedVenueInfo.name,
-                    simpleDescription = updatedVenueInfo.simpleDescription,
-                    description = updatedVenueInfo.description,
-                    facilityInfo = updatedVenueInfo.facilityInfo,
-                    precautions = updatedVenueInfo.precautions,
-                    refundPolicy = updatedVenueInfo.refundPolicy,
-                    websiteURL = updatedVenueInfo.websiteURL,
-                    detailAddress = updatedVenueInfo.detailAddress,
-                )
-            }
-            ResponseEntity.ok(resp)
+            val resp = toResponseVenueInfo(updatedVenue.get())
+            ResponseEntity.ok(resp.get())
         } else {
             ResponseEntity.notFound().build()
         }
@@ -179,16 +135,74 @@ class VenueInfoController(
 
     // 좌표 범위 내 장소 검색
     @GetMapping("/locationSearch")
-    fun getVenuesWithinDistance(@RequestBody searchRequest: SearchRequest): ResponseEntity<List<VenueInfo>> {
+    fun getVenuesWithinDistance(@RequestParam latitude: Double,
+                                @RequestParam longitude: Double,
+                                @RequestParam distance: Double): ResponseEntity<List<SimpleVenue>> {
         val geometryFactory = GeometryFactory()
-        val point: Point = geometryFactory.createPoint(Coordinate(searchRequest.coordinateInfo.longitude, searchRequest.coordinateInfo.latitude))  // 좌표는 (x, y) 순서로 사용
+        val point: Point = geometryFactory.createPoint(Coordinate(longitude, latitude))  // 좌표는 (x, y) 순서로 사용
         point.srid = 4326
-        val venues = venueInfoService.getVenuesWithinDistance(point, searchRequest.coordinateInfo.distance)
+        val venues = venueInfoService.getVenuesWithinDistance(point, distance)
 
-        return ResponseEntity.ok(filtering(venues, searchRequest.filter))
+        return ResponseEntity.ok(venues)
     }
 
-    // 장소 삭제
+    //장소 유형으로 장소 목록 가져오기
+    @GetMapping("/typeSearch")
+    fun getVenueByVenueType(@RequestParam type : String): ResponseEntity<List<VenueInfoResponse>> {
+        val list = venueInfoService.getVenuesByType(type)
+        return if(!list.isPresent){
+            ResponseEntity.notFound().build()
+        }
+        else{
+            val ret : MutableList<VenueInfoResponse> = mutableListOf()
+            for(element in list.get()){
+                val t = toResponseVenueInfo(element)
+                if(t.isPresent) ret.add(t.get())
+            }
+            if(ret.size > 0){
+                ResponseEntity.ok(ret.toList())
+            }
+            else{
+                ResponseEntity.notFound().build()
+            }
+        }
+    }
+
+    //지역명으로 장소 목록 가져오기
+    @GetMapping("/regionNameSearch")
+    fun getRandomVenue(@RequestBody regionName: regionName): ResponseEntity<List<VenueInfoResponse>> {
+        val list = venueInfoService.getVenuesByAddressName(regionName.si)
+        return if(list.isPresent) {
+            val ret : MutableList<VenueInfoResponse> = mutableListOf()
+            for(element in list.get()) {
+                val t = toResponseVenueInfo(element)
+                if(t.isPresent) ret.add(t.get())
+            }
+            if(ret.size > 0){
+                ResponseEntity.ok(ret.toList())
+            }
+            else{
+                ResponseEntity.notFound().build()
+            }
+        }
+        else{
+            ResponseEntity.notFound().build()
+        }
+    }
+
+    @GetMapping("/regionSearch")
+    fun getRegionVenue(@RequestBody regionName: regionName): ResponseEntity<List<SimpleVenue>> {
+        val list = venueInfoService.getVenueListByAddressName(regionName.si)
+        return if(list.isPresent){
+            ResponseEntity.ok(list.get())
+        }
+        else{
+            ResponseEntity.notFound().build()
+        }
+    }
+
+
+        // 장소 삭제
     @DeleteMapping("/{id}")
     fun deleteVenue(@PathVariable id: Int): ResponseEntity<Void> {
         venueInfoService.deleteVenue(id)
@@ -214,6 +228,35 @@ class VenueInfoController(
             }
         }
     }
+
+    fun toResponseVenueInfo(venueInfo: VenueInfo) : Optional<VenueInfoResponse> {
+        return if(venueInfo.location != null) {
+            Optional.of(
+                VenueInfoResponse(
+                    venueId = venueInfo.venueId,
+                    ownerId = venueInfo.ownerId,
+                    address = venueInfo.address,
+                    rentalFee = venueInfo.rentalFee ?: 0.0,
+                    capacity = venueInfo.capacity ?: 0,
+                    area = venueInfo.area,
+                    spaceType = venueInfo.spaceType + "",
+                    longitude = venueInfo.location.x,
+                    latitude = venueInfo.location.y,
+                    name = venueInfo.name,
+                    simpleDescription = venueInfo.simpleDescription,
+                    description = venueInfo.description,
+                    facilityInfo = venueInfo.facilityInfo,
+                    precautions = venueInfo.precautions,
+                    refundPolicy = venueInfo.refundPolicy,
+                    websiteURL = venueInfo.websiteURL,
+                    detailAddress = venueInfo.detailAddress,
+                )
+            )
+        }
+        else {
+            Optional.empty()
+        }
+    }
 }
 
 // DTO 및 서브 클래스들
@@ -227,6 +270,14 @@ data class CoordinateInfo (
     val latitude: Double,
     val longitude: Double,
     val distance: Double
+)
+
+data class regionName(
+    val si : String
+)
+
+data class venueType(
+    val type : String
 )
 
 data class VenueInfoDTO(
@@ -248,6 +299,7 @@ data class VenueInfoDTO(
     val detailAddress: String?  // 추가
 )
 
+//Location 데이터를 해석하지 못하는 문제를 해결하기 위한 DTO
 data class VenueInfoResponse(
     val venueId : Int,
     val ownerId: Int,
