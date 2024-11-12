@@ -44,90 +44,40 @@ class GptService {
     val apiService = retrofit.create(GptApiService::class.java)
 
     fun getResponse(str: String): String {
+        return gptCall(str, System.getProperty("GPT_ASSISTANCE"))
+    }
+
+    fun getTokenToSearch(input : String) : TokenListDTO? {
+        return getToken(input = input, System.getProperty("GPT_TOKEN"))
+    }
+
+    fun getTokenToVenue(input : String) : TokenListDTO? {
+        return getToken(input = input, System.getProperty("GPT_VENUE_TOKEN"))
+    }
+
+    private fun getToken(input : String, assistantId: String): TokenListDTO? {
         return try {
-            val gptAuth : String = System.getProperty("GPT_AUTH")
-            val assistanceId : String = System.getProperty("GPT_ASSISTANCE")
-
-            // getResponse API 호출
-            val threadRunResponse = apiService.getResponse(
-                authHeader = "Bearer $gptAuth",
-                MakeThreadDTO(
-                    assistant_id = assistanceId,
-                    thread = ThreadData(
-                        messages = listOf(
-                            MessageDTO(
-                                role = "user",
-                                content = str
-                            )
-                        )
-                    )
-                )
-            ).execute() // 동기 호출
-
-            if (threadRunResponse.isSuccessful) {
-                val threadRun = threadRunResponse.body()
-                val threadId = threadRun!!.thread_id
-                val runId = threadRun.id
-
-                // 최대 대기 시간 설정 (예: 1분)
-                val maxWaitTimeMillis = 60_000
-                val startTime = System.currentTimeMillis()
-
-                // checkRun을 호출해 상태가 "Complete"가 될 때까지 대기
-                var status: String
-                do {
-                    val checkRunResponse = apiService.checkRun(
-                        threadId = threadId,
-                        runId = runId,
-                        authHeader = "Bearer $gptAuth"
-                    ).execute()
-
-                    if (checkRunResponse.isSuccessful) {
-                        status = checkRunResponse.body()?.status ?: ""
-                        if (status != "completed") {
-                            println("Current status: $status. Waiting for completion...")
-                            Thread.sleep(2000) // 2초 대기 후 다시 상태 확인
-
-                            // 최대 대기 시간을 초과한 경우 에러 발생
-                            if (System.currentTimeMillis() - startTime > maxWaitTimeMillis) {
-                                throw RuntimeException("Timeout exceeded while waiting for completion.")
-                            }
-                        }
-                    } else {
-                        throw RuntimeException("Failed to check run status: ${checkRunResponse.errorBody()?.string()}")
-                    }
-                } while (status != "completed")
-
-                // 상태가 "Complete"가 된 후 getMessage 호출
-                val messageResponse = apiService.getMessage(
-                    authHeader = "Bearer $gptAuth",
-                    threadId = threadId
-                ).execute()
-
-                if (messageResponse.isSuccessful) {
-                    return messageResponse.body()?.data?.get(0)?.content?.last()?.text?.value ?: ""
-                } else {
-                    throw RuntimeException("Failed to get message: ${messageResponse.errorBody()?.string()}")
-                }
-            } else {
-                throw RuntimeException("Failed to get response: ${threadRunResponse.errorBody()?.string()}")
-            }
-        } catch (e: Exception) {
-            e.printStackTrace()
-            ""
+            val callResp = gptCall(input, assistantId)
+            val res = callResp.replace("```json", "").replace("```", "").trim()
+            println(res)
+            val mapper = ObjectMapper().registerKotlinModule()
+            mapper.readValue(res, TokenListDTO::class.java)
+        }
+        catch (e: Exception) {
+            println(e)
+            null
         }
     }
 
-    fun getToken(input : String): TokenListDTO? {
+    private fun gptCall(input : String, assistantId: String) : String{
         return try{
             val gptAuth : String = System.getProperty("GPT_AUTH")
-            val assistanceId_token : String = System.getProperty("GPT_TOKEN")
 
             // getResponse API 호출
             val threadRunResponse = apiService.getResponse(
                 authHeader = "Bearer $gptAuth",
                 MakeThreadDTO(
-                    assistant_id = assistanceId_token,
+                    assistant_id = assistantId,
                     thread = ThreadData(
                         messages = listOf(
                             MessageDTO(
@@ -184,15 +134,11 @@ class GptService {
 
                 if (messageResponse.isSuccessful) {
                     return try{
-                        val result = messageResponse.body()?.data?.get(0)?.content?.last()?.text?.value
-                        val res = result?.replace("```json", "")?.replace("```", "")?.trim()
-                        println(res)
-                        val mapper = ObjectMapper().registerKotlinModule()
-                        mapper.readValue(res, TokenListDTO::class.java)
+                        messageResponse.body()?.data?.get(0)?.content?.last()?.text?.value + ""
                     }
                     catch(e: Exception) {
                         println(e)
-                        null
+                        ""
                     }
                 } else {
                     throw RuntimeException("Failed to get message: ${messageResponse.errorBody()?.string()}")
@@ -203,7 +149,7 @@ class GptService {
         }
         catch (e : Exception){
             println(e)
-            null
+            ""
         }
     }
 }

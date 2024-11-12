@@ -78,7 +78,7 @@ class VenueInfoController(
         val createdVenue = venueInfoService.createVenue(venueInfo)
 
         //gpt 서비스로 토큰들 설명에 대한 토큰들 뽑아오기
-        val tokens = gptService.getToken(
+        val tokens = gptService.getTokenToVenue(
             venueInfoDTO.description +
             venueInfo.simpleDescription +
             venueInfo.facilityInfo +

@@ -22,7 +22,7 @@ class SearchController(
     fun searchVenues(@RequestBody searchRequest: SearchRequest): ResponseEntity<List<VenueScoreResponse>> {
 
 //        gpt로 태그 뽑아 오면 서치 토큰에 저장 하는 로직 넣아야 함
-        val tokens = gptService.getToken(searchRequest.keyword)
+        val tokens = gptService.getTokenToSearch(searchRequest.keyword)
         val str : MutableList<String> = ArrayList()
         tokens?.Tokens?.forEach {
             if(it.Subject != "Strange" && it.Subject != "NULL"){

@@ -23,7 +23,19 @@ class GptController(
 
     @PostMapping("/MakeToken")
     fun makeToken(@RequestBody question: Question): ResponseEntity<TokenListDTO> {
-        val response = gptService.getToken(question.question)
+        val response = gptService.getTokenToSearch(question.question)
+        return ResponseEntity.ok(response)
+    }
+
+    @PostMapping("/MakeToken/Search")
+    fun makeTokenSearch(@RequestBody question: Question): ResponseEntity<TokenListDTO> {
+        val response = gptService.getTokenToSearch(question.question)
+        return ResponseEntity.ok(response)
+    }
+
+    @PostMapping("/MakeToken/Venue")
+    fun makeTokenVenue(@RequestBody question: Question): ResponseEntity<TokenListDTO> {
+        val response = gptService.getTokenToVenue(question.question)
         return ResponseEntity.ok(response)
     }
 }
