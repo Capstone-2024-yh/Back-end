@@ -17,6 +17,15 @@ class TagController(
         return ResponseEntity.ok(tags)
     }
 
+    @GetMapping("/population")
+    fun getVenueTag(@RequestParam size : Int) : ResponseEntity<List<String>> {
+        val tags = tagService.getVenueTagByPopulation(size)
+        val response = tags.map {
+            it.tag
+        }
+        return ResponseEntity.ok(response)
+    }
+
     // VenueTag 삭제
     @DeleteMapping("/{id}")
     fun deleteVenueTag(@PathVariable id: Long): ResponseEntity<String> {
@@ -42,5 +51,9 @@ class TagController(
 // DTO 정의
 data class VenueTagRequest(
     val venueId: Int,
+    val tags: List<String>
+)
+
+data class TagResponse(
     val tags: List<String>
 )

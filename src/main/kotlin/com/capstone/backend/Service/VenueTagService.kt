@@ -28,6 +28,11 @@ class VenueTagService(
         return venueTagRepository.findBySimilarTag(vectors)
     }
 
+    fun getVenueTagByPopulation(population: Int): List<VenueTag> {
+        val tags = venueTagRepository.findAll()
+        return tags.subList(0, population)
+    }
+
     //새로운 VenueTag 생성
     @Transactional
     fun createVenueTags(venueId: Int, tags: List<String>): List<VenueTag> {
