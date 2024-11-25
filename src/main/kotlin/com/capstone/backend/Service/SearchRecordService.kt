@@ -10,7 +10,7 @@ class SearchRecordService(
     private val searchRecordRepository: SearchRecordRepository
 ) {
     fun addRecord(record: SearchRecord) {
-        searchRecordRepository.save(record)
+        //searchRecordRepository.save(record)
     }
 
     fun getSearchRecords(): List<SearchRecord> {
