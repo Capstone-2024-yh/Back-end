@@ -35,7 +35,7 @@ interface VenueTagRepository : JpaRepository<VenueTag, Long> {
 
     @Query(
         value = """
-        SELECT vt.venue_id AS venueId, 1 - (vt.vector <-> :vector) AS similarity
+        SELECT vt.venue_id AS venueId, 1 - (vt.vector <-> ?::vector) AS similarity
         FROM venue_tag vt
         ORDER BY similarity DESC
         LIMIT 50
