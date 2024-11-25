@@ -370,6 +370,7 @@ data class TokenListDTO(
 data class TokenDTO(
     @JsonProperty("Require") val Require : String,
     @JsonProperty("Subject") val Subject : String,
+    @JsonProperty("Summary") val Summary : String,
     @JsonProperty("Token") val Token : String
 )
 

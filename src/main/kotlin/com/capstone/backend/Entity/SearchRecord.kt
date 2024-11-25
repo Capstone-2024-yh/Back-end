@@ -10,7 +10,7 @@ data class SearchRecord (
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "id", nullable = false)
-    val id: Int? = null,
+    val id: Int? = 0,
 
     @Column(name = "user_id")
     val userId: Int? = null,
