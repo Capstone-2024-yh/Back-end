@@ -1,6 +1,8 @@
 package com.capstone.backend.controllers
 
+import com.capstone.backend.Service.FileDTO
 import com.capstone.backend.Service.GptService
+import com.capstone.backend.Service.ImageAnalysisResponse
 import com.capstone.backend.Service.TokenListDTO
 import org.springframework.http.ResponseEntity
 import org.springframework.web.bind.annotation.PostMapping
@@ -36,6 +38,18 @@ class GptController(
     @PostMapping("/MakeToken/Venue")
     fun makeTokenVenue(@RequestBody question: Question): ResponseEntity<TokenListDTO> {
         val response = gptService.getTokenToVenue(question.question)
+        return ResponseEntity.ok(response)
+    }
+
+    @PostMapping("/MakeImageToken")
+    fun makeImageToken(@RequestBody question: Question): ResponseEntity<ImageAnalysisResponse> {
+        val response = gptService.getImageTokenToVenue(question.question)
+        return ResponseEntity.ok(response)
+    }
+
+    @PostMapping("/UploadImage")
+    fun UploadImag(@RequestBody question: Question): ResponseEntity<FileDTO> {
+        val response = gptService.uploadImage(question.question, "file.png")
         return ResponseEntity.ok(response)
     }
 }

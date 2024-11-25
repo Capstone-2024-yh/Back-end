@@ -33,7 +33,7 @@ interface VenueTagByDescriptionRepository : JpaRepository<VenueTagByDescription,
 
     @Query(
         value = """
-        SELECT vtd.venue_id AS venueId, 1 - (vtd.vector <-> :vector) AS similarity
+        SELECT vtd.venue_id AS venueId, 1 - (vtd.vector <-> ?::vector) AS similarity
         FROM venue_tag_by_description vtd
         ORDER BY similarity DESC
         LIMIT 50

@@ -2,6 +2,7 @@ package com.capstone.backend.Controller
 
 import com.capstone.backend.Entity.VenueInfo
 import com.capstone.backend.Repository.SimpleVenue
+import com.capstone.backend.Repository.VenueInfoRepository
 import com.capstone.backend.Service.*
 import org.springframework.http.ResponseEntity
 import org.springframework.web.bind.annotation.*
@@ -16,7 +17,8 @@ class VenueInfoController(
     private val venueInfoService: VenueInfoService,
     private val venuePhotoService: VenuePhotoService,
     private val venueTagByDescriptionService: VenueTagByDescriptionService,
-    private val gptService: GptService
+    private val gptService: GptService,
+    private val rentalFeePolicyService: RentalFeePolicyService
 ) {
     @Deprecated("Paging 기법으로 제공할 예정")
     @GetMapping("/AllSearch")
@@ -76,25 +78,14 @@ class VenueInfoController(
         )
 
         val createdVenue = venueInfoService.createVenue(venueInfo)
+        createdVenue.rentalFee?.let { rentalFeePolicyService.addDefaultFee(createdVenue.venueId, it) }
 
-        //gpt 서비스로 토큰들 설명에 대한 토큰들 뽑아오기
-        val tokens = gptService.getTokenToVenue(
-            venueInfoDTO.description +
-            venueInfo.simpleDescription +
-            venueInfo.facilityInfo +
-            venueInfo.precautions +
-            venueInfo.refundPolicy + ""
+        makeVenueTag(createdVenue.venueId,createdVenue.description +
+                createdVenue.simpleDescription +
+                createdVenue.facilityInfo +
+                createdVenue.precautions +
+                createdVenue.refundPolicy + ""
         )
-
-        val tags : MutableList<String> = ArrayList()
-        tokens?.Tokens?.forEach {
-            if(it.Subject != "Strange" && it.Subject != "NULL"){
-                tags.add(it.Token)
-            }
-        }
-
-        //뽑아돈 토큰들 벡터 만들어서 저장하기
-        venueTagByDescriptionService.createVenueTags(createdVenue.venueId, tags)
 
         val resp = toResponseVenueInfo(createdVenue)
         return ResponseEntity.ok(resp.get())
@@ -200,8 +191,6 @@ class VenueInfoController(
             ResponseEntity.notFound().build()
         }
     }
-
-
         // 장소 삭제
     @DeleteMapping("/{id}")
     fun deleteVenue(@PathVariable id: Int): ResponseEntity<Void> {
@@ -212,6 +201,53 @@ class VenueInfoController(
         return ResponseEntity.noContent().build()
     }
 
+    @GetMapping("/makeTag/{id}")
+    fun makeVenueTagById(@PathVariable id: Int): ResponseEntity<List<String>> {
+        val venueInfo = venueInfoService.getVenueById(id)
+        if(venueInfo.isPresent){
+            val tagList = makeVenueTag(id, venueInfo.get().description +
+                    venueInfo.get().simpleDescription +
+                    venueInfo.get().facilityInfo +
+                    venueInfo.get().precautions +
+                    venueInfo.get().refundPolicy + "")
+            if(tagList.size > 0){
+                return ResponseEntity.ok(tagList)
+            }
+        }
+        return ResponseEntity.noContent().build()
+    }
+
+    fun makeVenueTag(venueId : Int, venueInfo: String): List<String> {
+        if(venueInfoService.getVenueById(venueId).isPresent){
+            //gpt 서비스로 토큰들 설명에 대한 토큰들 뽑아오기
+            val tokens = gptService.getTokenToVenue(venueInfo)
+
+            val tags : MutableList<String> = ArrayList()
+            tokens?.Tokens?.forEach {
+                if(it.Subject != "Strange" && it.Subject != "NULL"){
+                    when(it.Subject){
+                        "AdditionFee" -> {
+                            rentalFeePolicyService.makeRentalFeeByToken(venueId, it)
+                        }
+                        "NearBy", "Policy", "Service", "Style", "Purpose"  -> {
+                            tags.add(it.Token)
+                        }
+                    }
+                }
+            }
+
+            //뽑아온 토큰들 벡터 만들어서 저장하기
+            venueTagByDescriptionService.createVenueTags(venueId, tags)
+            return tags.toList()
+        }
+
+        return listOf()
+    }
+
+    fun resetVenueTag(venueId : Int) {
+        venueTagByDescriptionService.deleteVenueTag(venueId.toLong())
+    }
+
     // 필터링 기능
     fun filtering(venueList: List<VenueInfo>, filter: VenueFilter?): List<VenueInfo> {
         return if (filter == null) {
@@ -219,12 +255,12 @@ class VenueInfoController(
         } else {
             venueList.filter { venueInfo ->
                 (filter.address == null || venueInfo.address.contains(filter.address)) &&
-                        (filter.minRentalFee == null || venueInfo.rentalFee!! >= filter.minRentalFee) &&
-                        (filter.maxRentalFee == null || venueInfo.rentalFee!! <= filter.maxRentalFee) &&
-                        (filter.minCapacity == null || venueInfo.capacity!! >= filter.minCapacity) &&
-                        (filter.minArea == null || venueInfo.area!! >= filter.minArea) &&
-                        (filter.maxArea == null || venueInfo.area!! <= filter.maxArea) &&
-                        (filter.spaceType == null || venueInfo.spaceType!! == filter.spaceType)
+                (filter.minRentalFee == null || venueInfo.rentalFee!! >= filter.minRentalFee) &&
+                (filter.maxRentalFee == null || venueInfo.rentalFee!! <= filter.maxRentalFee) &&
+                (filter.minCapacity == null || venueInfo.capacity!! >= filter.minCapacity) &&
+                (filter.minArea == null || venueInfo.area!! >= filter.minArea) &&
+                (filter.maxArea == null || venueInfo.area!! <= filter.maxArea) &&
+                (filter.spaceType == null || venueInfo.spaceType!! == filter.spaceType)
             }
         }
     }
