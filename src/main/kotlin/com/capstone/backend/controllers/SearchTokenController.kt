@@ -12,7 +12,7 @@ class SearchTokenController(
 ) {
 
     @GetMapping("/cluster")
-    fun clusterSearchTokens(): List<Pair<Int, Int>> {
+    fun clusterSearchTokens(): List<Triple<Int, Int, String>> {
         // DBSCAN 군집화 수행 후 결과 반환
         return searchTokenService.performDBSCANClustering()
     }

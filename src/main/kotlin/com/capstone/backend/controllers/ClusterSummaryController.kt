@@ -12,14 +12,14 @@ class ClusterSummaryController(
     private val clusterSummaryService: ClusterSummaryService
 ) {
 
-    @GetMapping("/cluster")
-    fun clusterAndSaveSummaries(): String {
-        clusterSummaryService.performAndSaveClustering()
-        return "Clustering completed and summaries saved."
-    }
+//    @GetMapping("/cluster")
+//    fun clusterAndSaveSummaries(): String {
+//        clusterSummaryService.performAndSaveClustering()
+//        return "Clustering completed and summaries saved."
+//    }
 
     @GetMapping("/latest")
     fun getLatestClusterSummaries(): List<ClusterSummary> {
-        return clusterSummaryService.getLatestClusterSummaries()
+        return clusterSummaryService.getLatestClustersOrderedBySize()
     }
 }

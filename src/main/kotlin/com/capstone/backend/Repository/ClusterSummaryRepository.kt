@@ -17,4 +17,17 @@ interface ClusterSummaryRepository : JpaRepository<ClusterSummary, Int> {
     // 가장 최신 날짜 찾기
     @Query("SELECT MAX(c.createdAt) FROM ClusterSummary c")
     fun findLatestCreatedAt(): LocalDateTime?
+
+
+    @Query("""
+        SELECT * 
+        FROM cluster_summary cs
+        WHERE cs.created_at = (
+            SELECT MAX(cs2.created_at) FROM cluster_summary cs2
+        )
+        ORDER BY cs.cluster_size DESC
+        LIMIT 10
+    """, nativeQuery = true)
+    fun findLatestClustersOrderedBySize(): List<ClusterSummary>
+
 }

@@ -42,7 +42,6 @@ class ClusterSummaryService(
             // ClusterSummary 엔티티 생성 및 저장
             val clusterSummary = ClusterSummary(
                 clusterId = clusterId,
-                representativeToken = representativeTokenId,
                 tokenText = tokenText,
                 clusterSize = clusterTokenIds.size
             )
@@ -60,6 +59,11 @@ class ClusterSummaryService(
         } else {
             emptyList()
         }
+    }
+
+    // 군집 크기 순으로 정렬된 최신 ClusterSummary 데이터 가져오기
+    fun getLatestClustersOrderedBySize(): List<ClusterSummary> {
+        return clusterSummaryRepository.findLatestClustersOrderedBySize()
     }
 
     private fun calculateCentroid(vectors: List<DoubleArray>): DoubleArray {
