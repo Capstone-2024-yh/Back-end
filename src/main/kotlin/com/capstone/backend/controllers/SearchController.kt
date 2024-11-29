@@ -28,7 +28,7 @@ class SearchController(
     .toFormatter()
 
     @PostMapping("/searchKeyword")
-    suspend fun searchVenues(@RequestBody searchRequest: SearchRequest): ResponseEntity<List<VenueScoreResponse>> {
+    suspend fun searchVenues(@RequestBody searchRequest: SearchRequest): Map<String, List<Any>>  {
         searchRecordService.addRecord(SearchRecord(
             userId = 0,
             searchString = searchRequest.keyword
@@ -46,46 +46,52 @@ class SearchController(
 
         // 검색에 활용된 토큰들을 저장 함
         val searchTokens = withContext(Dispatchers.IO) {
-            searchTokenService.saveSearchTokens(searchRequest.uid, tokenList)
-        }
-        val vectors = searchTokens.map { it.vector }
-
-        val searchResults = searchService.findTopVenuesBySimilarity(vectors)
-        return ResponseEntity.ok(searchResults) //장소 정보 까지 포함해서 한번해 줘
-    }
-
-    @PostMapping("/searchAssist")
-    suspend fun searchAssist(@RequestBody searchRequest: SearchRequest) : ResponseEntity<FeedbackDataDTO>{
-        val tokens = gptService.getTokenToSearch(searchRequest.keyword)
-
-        val filter : Filter = Filter()
-
-        filter.Capacity = searchRequest.maxCapacity?.toDouble() ?: 0.0
-        searchRequest.location?.let { filter.Address.add(it) }
-        filter.Fee = searchRequest.maxFee?: 0.0
-
-        val tokenList = makeSearchToken(tokens, filter)
-
-        // 검색에 활용된 토큰들을 저장 함
-        val searchTokens = withContext(Dispatchers.IO) {
-            searchTokenService.saveSearchTokens(searchRequest.uid, tokenList)
+            searchTokenService.saveSearchTokens(searchRequest.uid, tokenList.first)
         }
         val vectors = searchTokens.map { it.vector }
 
         val searchResults = searchService.findTopVenuesBySimilarity(vectors)
 
-        return if(tokens != null && searchResults.isNotEmpty()){
-            val response = makeResponse(tokens, searchResults.map { it.venueId }, filter)
-            ResponseEntity.ok(response)
-        }
-        else {
-            ResponseEntity.noContent().build()
-        }
+        val map :Map<String, List<Any>> = mapOf(
+            "searchResults" to searchResults,
+            "feedback" to tokenList.second
+        )
+        return map
     }
 
-    private fun makeSearchToken(tokens : TokenListDTO?, filter : Filter) : List<String> {
+//    @PostMapping("/searchAssist")
+//    suspend fun searchAssist(@RequestBody searchRequest: SearchRequest) : ResponseEntity<FeedbackDataDTO>{
+//        val tokens = gptService.getTokenToSearch(searchRequest.keyword)
+//
+//        val filter : Filter = Filter()
+//
+//        filter.Capacity = searchRequest.maxCapacity?.toDouble() ?: 0.0
+//        searchRequest.location?.let { filter.Address.add(it) }
+//        filter.Fee = searchRequest.maxFee?: 0.0
+//
+//        val tokenList = makeSearchToken(tokens, filter)
+//
+//        // 검색에 활용된 토큰들을 저장 함
+//        val searchTokens = withContext(Dispatchers.IO) {
+//            searchTokenService.saveSearchTokens(searchRequest.uid, tokenList)
+//        }
+//        val vectors = searchTokens.map { it.vector }
+//
+//        val searchResults = searchService.findTopVenuesBySimilarity(vectors)
+//
+//        return if(tokens != null && searchResults.isNotEmpty()){
+//            val response = makeResponse(tokens, searchResults.map { it.venueId }, filter)
+//            ResponseEntity.ok(response)
+//        }
+//        else {
+//            ResponseEntity.noContent().build()
+//        }
+//    }
+
+    private fun makeSearchToken(tokens : TokenListDTO?, filter : Filter) : Pair<List<String>,List<String>> {
         //토큰 리스트
         val tokenList : MutableList<String> = ArrayList()
+        val feedbackList : MutableList<String> = ArrayList()
 
         if(tokens != null) {
             tokens.Tokens.forEach { it ->
@@ -145,13 +151,14 @@ class SearchController(
                         }
 
                         "Feedback" -> { //응답에서 Feedback 항목만 분리해서 전송
+                            feedbackList.add(it.Summary)
                         }
                     }
                 }
             }
         }
 
-        return tokenList
+        return Pair(tokenList, feedbackList)
     }
 
     private fun makeResponse(tokenList : TokenListDTO, venueIdList: List<Int>, filter: Filter) : FeedbackDataDTO? {
