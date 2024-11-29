@@ -75,7 +75,7 @@ class SearchController(
         val searchResults = searchService.findTopVenuesBySimilarity(vectors)
 
         return if(tokens != null && searchResults.isNotEmpty()){
-            val response = makeResponse(tokens, searchResults.map { it.venueId }, filter)
+            val response = makeResponse(tokens, searchResults.map { it.venueId }.subList(0,3), filter)
             ResponseEntity.ok(response)
         }
         else {
