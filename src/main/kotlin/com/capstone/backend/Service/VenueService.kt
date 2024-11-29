@@ -21,6 +21,10 @@ class VenueInfoService(private val venueInfoRepository: VenueInfoRepository) {
         return venueInfoRepository.findById(venueId)
     }
 
+    fun getVenuesById(venueIds: List<Int>): List<VenueInfo> {
+        return venueInfoRepository.findAllById(venueIds)
+    }
+
     // 새로운 장소 추가
     fun createVenue(venueInfo: VenueInfo): VenueInfo {
         return venueInfoRepository.save(venueInfo)
