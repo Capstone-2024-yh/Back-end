@@ -1,6 +1,5 @@
 package com.capstone.backend.Service
 
-import com.capstone.backend.Controller.VenueInfoResponse
 import com.capstone.backend.Repository.VenueTagByDescriptionRepository
 import com.capstone.backend.Repository.VenueTagRepository
 import org.springframework.stereotype.Service

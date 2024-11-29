@@ -4,6 +4,9 @@ import com.capstone.backend.Entity.ClusterSummary
 import com.capstone.backend.Entity.SearchToken
 import com.capstone.backend.Repository.ClusterSummaryRepository
 import com.capstone.backend.Repository.SearchTokenRepository
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
@@ -43,7 +46,17 @@ class SearchTokenService(
                 vector = vectors[token] ?: throw IllegalArgumentException("Word2Vec API returned no result")
             )
         }
-        return searchTokenRepository.saveAll(searchTokens)
+
+        // 비동기로 저장
+        CoroutineScope(Dispatchers.IO).launch {
+            try {
+                searchTokenRepository.saveAll(searchTokens)
+            } catch (e : Exception) {
+                println(e)
+            }
+        }
+
+        return searchTokens
     }
 
     @Transactional
