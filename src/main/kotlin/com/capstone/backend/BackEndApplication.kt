@@ -19,6 +19,7 @@ fun main(args: Array<String>) {
     System.setProperty("GPT_TOKEN", dotenv["GPT_TOKEN"])
     System.setProperty("GPT_VENUE_TOKEN", dotenv["GPT_VENUE_TOKEN"])
     System.setProperty("GPT_IMAGE_TOKEN", dotenv["GPT_IMAGE_TOKEN"])
+    System.setProperty("GPT_FEEDBACK", dotenv["GPT_FEEDBACK"])
 
     runApplication<BackEndApplication>(*args)
 }

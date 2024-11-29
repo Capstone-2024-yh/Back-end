@@ -3,7 +3,6 @@ package com.capstone.backend.Service
 import com.fasterxml.jackson.annotation.JsonProperty
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.module.kotlin.registerKotlinModule
-import okhttp3.MediaType
 import okhttp3.MediaType.Companion.toMediaTypeOrNull
 import okhttp3.MultipartBody
 import okhttp3.RequestBody
@@ -76,6 +75,10 @@ class GptService {
         return getToken(input = input, System.getProperty("GPT_VENUE_TOKEN"))
     }
 
+    fun getFeedback(input : FeedbackDTO) : FeedbackResponseDTO? {
+        return getJsonObject<FeedbackResponseDTO>(input.toString(), System.getProperty("GPT_FEEDBACK"))
+    }
+
     private fun getToken(input : String, assistantId: String): TokenListDTO? {
         return try {
             val callResp = gptCall(input, assistantId)
@@ -83,6 +86,20 @@ class GptService {
             println(res)
             val mapper = ObjectMapper().registerKotlinModule()
             mapper.readValue(res, TokenListDTO::class.java)
+        }
+        catch (e: Exception) {
+            println(e)
+            null
+        }
+    }
+
+    private inline fun <reified T> getJsonObject(input : String, assistantId: String) : T? {
+        return try {
+            val callResp = gptCall(input, assistantId)
+            val res = callResp.replace("```json", "").replace("```", "").trim()
+            println(res)
+            val mapper = ObjectMapper().registerKotlinModule()
+            mapper.readValue(res, T::class.java)
         }
         catch (e: Exception) {
             println(e)
@@ -106,7 +123,6 @@ class GptService {
             println(e)
             null
         }
-
     }
 
     fun uploadImage(base64 : String, fileName: String) : FileDTO? {
@@ -372,6 +388,40 @@ data class TokenDTO(
     @JsonProperty("Subject") val Subject : String,
     @JsonProperty("Summary") val Summary : String,
     @JsonProperty("Token") val Token : String
+)
+
+//Feedback용 DTO
+data class FeedbackDTO(
+    val Tokens: List<TokenDTO>,
+    val VenueInfos: List<VenueInfoDTO>,
+    val Feedback: List<String>
+)
+
+data class Token(
+    val Require: String,
+    val Subject: String,
+    val Summary: String,
+    val Token: String
+)
+
+data class VenueInfoDTO(
+    val venueId: Int,
+    val name: String,
+    val description: String,
+    val style: List<String>,
+    val caution: String
+)
+
+//Feedback 응답용 DTO
+data class FeedbackResponseDTO(
+    val Messages: List<FeedbackMessageDTO>,
+    val Feedback: List<String>
+)
+
+data class FeedbackMessageDTO(
+    val venueId: Int,
+    val reason: List<String>,
+    val caution: List<String>
 )
 
 //이미지 토큰용 DTO
