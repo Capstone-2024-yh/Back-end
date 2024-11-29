@@ -2,6 +2,8 @@ package com.capstone.backend.controllers
 
 import com.capstone.backend.Entity.SearchRecord
 import com.capstone.backend.Service.*
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.withContext
 import org.springframework.http.ResponseEntity
 import org.springframework.web.bind.annotation.PostMapping
 import org.springframework.web.bind.annotation.RequestBody
@@ -25,7 +27,7 @@ class SearchController(
     .toFormatter()
 
     @PostMapping("/searchKeyword")
-    fun searchVenues(@RequestBody searchRequest: SearchRequest): ResponseEntity<List<VenueScoreResponse>> {
+    suspend fun searchVenues(@RequestBody searchRequest: SearchRequest): ResponseEntity<List<VenueScoreResponse>> {
         searchRecordService.addRecord(SearchRecord(
             userId = 0,
             searchString = searchRequest.keyword
@@ -100,7 +102,9 @@ class SearchController(
         }
 
         // 검색에 활용된 토큰들을 저장 함
-        val searchTokens = searchTokenService.saveSearchTokens(searchRequest.uid, tokenList)
+        val searchTokens = withContext(Dispatchers.IO) {
+            searchTokenService.saveSearchTokens(searchRequest.uid, tokenList)
+        }
         val vectors = searchTokens.map { it.vector }
 
         val searchResults = searchService.findTopVenuesBySimilarity(vectors)
