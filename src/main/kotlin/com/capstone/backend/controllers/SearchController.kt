@@ -5,10 +5,7 @@ import com.capstone.backend.Service.*
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import org.springframework.http.ResponseEntity
-import org.springframework.web.bind.annotation.PostMapping
-import org.springframework.web.bind.annotation.RequestBody
-import org.springframework.web.bind.annotation.RequestMapping
-import org.springframework.web.bind.annotation.RestController
+import org.springframework.web.bind.annotation.*
 import java.time.LocalDateTime
 import java.time.format.DateTimeFormatter
 import java.time.format.DateTimeFormatterBuilder
@@ -88,6 +85,21 @@ class SearchController(
 //        }
 //    }
 
+    @PostMapping("/getResponse/{id}")
+    suspend fun getVenueFeedback(@PathVariable id : Int, @RequestBody tokens: TokenListDTO) : ResponseEntity<VenueResDTO> {
+        val venueOption = venueInfoService.getVenueById(id)
+        if (venueOption.isPresent) {
+            val venue = venueOption.get()
+            if (venue.name != null && venue.description != null && venue.precautions != null) {
+                val response = makeResponse(tokens, listOf(venue.venueId), null)
+                if(response != null && response.venueInfo.size > 0){
+                    return ResponseEntity.ok(response.venueInfo.get(0))
+                }
+            }
+        }
+        return ResponseEntity.notFound().build()
+    }
+    
     private fun makeSearchToken(tokens : TokenListDTO?, filter : Filter) : Pair<List<String>,List<String>> {
         //토큰 리스트
         val tokenList : MutableList<String> = ArrayList()
@@ -161,7 +173,7 @@ class SearchController(
         return Pair(tokenList, feedbackList)
     }
 
-    private fun makeResponse(tokenList : TokenListDTO, venueIdList: List<Int>, filter: Filter) : FeedbackDataDTO? {
+    fun makeResponse(tokenList : TokenListDTO, venueIdList: List<Int>, filter: Filter?) : FeedbackDataDTO? {
         val venueList = venueInfoService.getVenuesById(venueIdList)
         val venueInfoList = venueList
             .filter { it.name != null && it.description != null && it.facilityInfo != null }

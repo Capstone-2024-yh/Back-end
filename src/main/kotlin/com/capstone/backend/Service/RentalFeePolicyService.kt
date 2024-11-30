@@ -24,7 +24,7 @@ class RentalFeePolicyService(
         return Optional.of(fee)
     }
 
-    fun getRentalFeeFromFilter(venueId : Int, filter : Filter) : Double {
+    fun getRentalFeeFromFilter(venueId : Int, filter : Filter?) : Double {
         val list = rentalFeePolicyRespository.getRentalFeePoliciesByVenueId(venueId)
 
         val timeDepList = mutableListOf<RentalFeePolicy>()
@@ -33,22 +33,10 @@ class RentalFeePolicyService(
         var capacity : RentalFeePolicy? = null
         var secue : Double = 0.0
 
-        list.map {
-            when(it.policyType){
-                FeeType.default.ordinal -> {
-                    if(it.timeDependent){
-                        timeDepList.add(it)
-                    }
-                    else{
-                        nonTimeDepList.add(it)
-                    }
-                }
-                FeeType.security.ordinal -> {
-                    secue += it.amount
-                }
-                FeeType.weekend.ordinal -> {
-                    if(filter.Date.first.dayOfWeek.value >= 6 || filter.Date.second.dayOfWeek.value >= 6
-                        || filter.Date.first.dayOfWeek.value > filter.Date.second.dayOfWeek.value) {
+        if (filter != null) {
+            list.map {
+                when(it.policyType){
+                    FeeType.default.ordinal -> {
                         if(it.timeDependent){
                             timeDepList.add(it)
                         }
@@ -56,30 +44,53 @@ class RentalFeePolicyService(
                             nonTimeDepList.add(it)
                         }
                     }
-                    else { }
-                }
-                FeeType.capacity.ordinal -> {
-                    if (filter.Capacity < it.expression.toDouble()
-                        && (capacity?.expression?.toDouble() ?: 0.0) < it.expression.toDouble()){
-                        capacity = it
+                    FeeType.security.ordinal -> {
+                        secue += it.amount
                     }
-                    else { }
+                    FeeType.weekend.ordinal -> {
+                        if(filter.Date.first.dayOfWeek.value >= 6 || filter.Date.second.dayOfWeek.value >= 6
+                            || filter.Date.first.dayOfWeek.value > filter.Date.second.dayOfWeek.value) {
+                            if(it.timeDependent){
+                                timeDepList.add(it)
+                            }
+                            else{
+                                nonTimeDepList.add(it)
+                            }
+                        }
+                        else { }
+                    }
+                    FeeType.capacity.ordinal -> {
+                        if (filter.Capacity < it.expression.toDouble()
+                            && (capacity?.expression?.toDouble() ?: 0.0) < it.expression.toDouble()){
+                            capacity = it
+                        }
+                        else { }
+                    }
+                    FeeType.service.ordinal -> {
+                        //서비스끼리의 비교가 가능할 경우,
+                    }
+                    else -> {}
                 }
-                FeeType.service.ordinal -> {
-                    //서비스끼리의 비교가 가능할 경우,
-                }
-                else -> {}
+            }
+
+            val tValue = timeDepList.sumOf { it.amount } * 9
+            val ntValue = nonTimeDepList.sumOf { it.amount }
+
+            return if(tValue < ntValue) {
+                ntValue + ((capacity?.amount ?: 0) + secue)
+            }
+            else {
+                tValue + ((capacity?.amount ?: 0) + secue)
             }
         }
-
-        val tValue = timeDepList.sumOf { it.amount } * 9
-        val ntValue = nonTimeDepList.sumOf { it.amount }
-
-        return if(tValue < ntValue) {
-            ntValue + ((capacity?.amount ?: 0) + secue)
-        }
-        else {
-            tValue + ((capacity?.amount ?: 0) + secue)
+        else{
+            val result = list.find { it.expression == "Default" }
+            return if(result != null){
+                result.amount.toDouble()
+            }
+            else{
+                0.0
+            }
         }
     }
 
