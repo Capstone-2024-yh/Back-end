@@ -246,7 +246,12 @@ class VenueInfoController(
                 if(it.Subject != "Strange" && it.Subject != "NULL"){
                     when(it.Subject){
                         "AdditionFee" -> {
-                            rentalFeePolicyService.makeRentalFeeByToken(venueId, it)
+                            try{
+                                rentalFeePolicyService.makeRentalFeeByToken(venueId, it)
+                            }
+                            catch (e : Exception){
+                                print(e)
+                            }
                         }
                         "NearBy", "Policy", "Service", "Style", "Purpose"  -> {
                             tags.add(it.Token)
