@@ -107,65 +107,70 @@ class SearchController(
 
         if(tokens != null) {
             tokens.Tokens.forEach { it ->
-                if(it.Subject != "Strange" && it.Subject != "NULL"){
-                    when(it.Subject){
-                        "Address" -> { //필터에 주소 항목 추가
-                            filter.Address.add(it.Token)
-                        }
-
-                        "NearBy" -> {
-                            // 검색어 기반 좌표 검색을 한다면 Kakao Api 호출 필요
-                            tokenList.add(it.Token)
-                        }
-
-                        "Equipment" -> { //필터에 기자재 목록 추가
-                            tokenList.add(it.Token)
-                            if(it.Token[0] == 'O'){
-                                filter.EquipmentList.add(it.Token)
+                try{
+                    if(it.Subject != "Strange" && it.Subject != "NULL"){
+                        when(it.Subject){
+                            "Address" -> { //필터에 주소 항목 추가
+                                filter.Address.add(it.Token)
                             }
-                        }
 
-                        "Date" -> { //예약 기간 확인을 위한 일정 시작, 끝 필터
-                            try{
-                                val time = LocalDateTime.parse(it.Token, formatter)
+                            "NearBy" -> {
+                                // 검색어 기반 좌표 검색을 한다면 Kakao Api 호출 필요
+                                tokenList.add(it.Token)
+                            }
 
-                                if(filter.Date.first == LocalDateTime.MIN){
-                                    filter.Date = Pair(time, time)
-                                } else if(filter.Date.first > time){
-                                    filter.Date = Pair(time, filter.Date.second)
-                                } else if(filter.Date.second < time){
-                                    filter.Date = Pair(filter.Date.first, time)
+                            "Equipment" -> { //필터에 기자재 목록 추가
+                                tokenList.add(it.Token)
+                                if(it.Token[0] == 'O'){
+                                    filter.EquipmentList.add(it.Token)
                                 }
-                            } catch(e: Exception){
-                                println(e.message)
                             }
-                        }
 
-                        "Capacity" -> { //수용 인원 필터 추가
-                            val value : Double = it.Token.substring(2, it.Token.length).toDouble()
-                            filter.Capacity = if(filter.Capacity < value) value else filter.Capacity
-                        }
+                            "Date" -> { //예약 기간 확인을 위한 일정 시작, 끝 필터
+                                try{
+                                    val time = LocalDateTime.parse(it.Token, formatter)
 
-                        "Area" -> { //면적 필터 추가
-                            val value : Double = it.Token.substring(2, it.Token.length).toDouble()
-                            filter.Area = if(filter.Area < value) value else filter.Area
-                        }
-
-                        "SpaceType" -> { //장소 종류 리스트에 추가
-                            tokenList.add(it.Token)
-                            if(it.Token[0] == 'O') {
-                                filter.SpaceType.add(it.Token.substring(2, it.Token.length))
+                                    if(filter.Date.first == LocalDateTime.MIN){
+                                        filter.Date = Pair(time, time)
+                                    } else if(filter.Date.first > time){
+                                        filter.Date = Pair(time, filter.Date.second)
+                                    } else if(filter.Date.second < time){
+                                        filter.Date = Pair(filter.Date.first, time)
+                                    }
+                                } catch(e: Exception){
+                                    println(e.message)
+                                }
                             }
-                        }
 
-                        "Policy", "Service", "Purpose" -> { //서치 토큰만 추가
-                            tokenList.add(it.Token)
-                        }
+                            "Capacity" -> { //수용 인원 필터 추가
+                                val value : Double = it.Token.substring(2, it.Token.length).toDouble()
+                                filter.Capacity = if(filter.Capacity < value) value else filter.Capacity
+                            }
 
-                        "Feedback" -> { //응답에서 Feedback 항목만 분리해서 전송
-                            feedbackList.add(it.Summary)
+                            "Area" -> { //면적 필터 추가
+                                val value : Double = it.Token.substring(2, it.Token.length).toDouble()
+                                filter.Area = if(filter.Area < value) value else filter.Area
+                            }
+
+                            "SpaceType" -> { //장소 종류 리스트에 추가
+                                tokenList.add(it.Token)
+                                if(it.Token[0] == 'O') {
+                                    filter.SpaceType.add(it.Token.substring(2, it.Token.length))
+                                }
+                            }
+
+                            "Policy", "Service", "Purpose" -> { //서치 토큰만 추가
+                                tokenList.add(it.Token)
+                            }
+
+                            "Feedback" -> { //응답에서 Feedback 항목만 분리해서 전송
+                                feedbackList.add(it.Summary)
+                            }
                         }
                     }
+                }
+                catch (e : Exception){
+                    println(e.message)
                 }
             }
         }
