@@ -20,6 +20,8 @@ interface VenueInfoRepository : JpaRepository<VenueInfo, Int> {
         @Param("distance") distance: Double
     ): List<SimpleVenue>
 
+    fun findVenueInfosByOwnerId(@Param("userId") ownerId: Int): Optional<List<VenueInfo>>
+
     fun findVenueInfoBySpaceType(spaceType: String): Optional<List<VenueInfo>>
 
     @Query(value = """

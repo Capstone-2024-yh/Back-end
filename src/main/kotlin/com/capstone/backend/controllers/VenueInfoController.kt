@@ -53,6 +53,25 @@ class VenueInfoController(
         }
     }
 
+    @GetMapping("/User/{id}")
+    fun getVenueByUserId(@PathVariable id: Int): ResponseEntity<List<VenueInfoResponse>> {
+        val venues = venueInfoService.getVenuesByUserId(id)
+
+        if (venues.isPresent) {
+            val list : MutableList<VenueInfoResponse> = mutableListOf()
+            venues.get().forEach { venue ->
+                val response = toResponseVenueInfo(venue)
+                if(response.isPresent){
+                    list.add(response.get())
+                }
+            }
+
+            return ResponseEntity.ok(list.toList())
+        }
+
+        return ResponseEntity.notFound().build()
+    }
+
     // 새로운 장소 추가
     @PostMapping("/create")
     fun createVenue(
